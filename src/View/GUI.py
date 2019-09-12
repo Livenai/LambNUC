@@ -1,4 +1,6 @@
 import sys
+from abc import ABC
+
 import cv2
 import numpy as np
 import time
@@ -8,10 +10,10 @@ if sys.version_info[0] < 3:
 else:
     import PySimpleGUI as sg
 
-__tittle__ = "LambScan"
+__title__ = "LambScan"
 
 
-# def Prompt(text_messages, tittle_window=__tittle__):
+# def Prompt(text_messages, title=__title__):
 #     layout = []
 #
 #     if type(text_messages) is str:
@@ -21,32 +23,75 @@ __tittle__ = "LambScan"
 #             layout.append([sg.Text(msg), sg.InputText('')])
 #     layout.append([sg.Submit(), sg.Cancel()])
 #
-#     window = sg.Window(tittle_window, layout)
+#     window = sg.Window(title, layout)
 #     button, values = window.Read()
 #     return button, values
 
 
-def PopupChooseFile(text_message, file_ext=None):
+def PopupChooseFile(text_message):
+    sg.ChangeLookAndFeel('Reddit')
     filename = sg.PopupGetFile(text_message)
-    # layout = [[sg.Text(text_message)],
-    #           [sg.Text('File:', size=(7, 1)), sg.Input(), sg.FileBrowse()],
-    #           [sg.Submit(), sg.Cancel()]]
-    #
-    # window = sg.Window('Read file', layout)
-    #
-    # event, filename = window.Read()
-    # window.Close()
-    if file_ext is None:
-        return filename
-    elif file_ext is not None and file_ext in filename:
-        return filename
-    else:
-        return None
+    return filename
 
 
-class StartingWindow:
-    def __init__(self, tittle_window=__tittle__):
-        self.tittle = tittle_window
+class __DefaultWindow__(ABC):
+    def __init__(self, title=__title__):
+        sg.ChangeLookAndFeel('Reddit')
+        self.layout = []
+        self.title = title
+        self.window = None
+        self.close = None
+        self.events = []
+
+    def launch(self):
+        self.close = self.window.Close
+        self.window = sg.Window(self.title, self.layout, location=(800, 400))
+
+
+class WLoadImage(__DefaultWindow__):
+    def __init__(self, title=__title__):
+        super(WLoadImage, self).__init__(title)
+        self.layout = [[sg.Button(button_text='PLY / PCD', key='ply', size=(5, 1), font=('wingdings', 14))],
+                       [sg.Button(button_text='PNGs', key='pngs', size=(5, 1), font=('wingdings', 14))]]
+        self.window = sg.Window(title, self.layout, location=(800, 400))
+        event, value = self.window.Read()
+        if event == 'ply':
+            filename = PopupChooseFile(text_message="Choose a PointCloud file:")
+        elif event == 'pngs':
+            self.toChoose()
+
+
+class WChooseFiles(__DefaultWindow__):
+    def __init__(self, title=__title__):
+        super(WChooseFiles, self).__init__(title)
+        self.layout = [
+            [sg.Text('File RGB:', size=(10, 1)), sg.Input(), sg.FileBrowse()],
+            [sg.Text('File Depth:', size=(10, 1)), sg.Input(), sg.FileBrowse()],
+            [sg.Submit(), sg.Cancel()],
+            [sg.Text('', key='error_text', text_color='red', size=(20, 1), visible=False)]]
+
+        self.window = sg.Window('Read files', self.layout, location=(800, 400))
+
+        exit = False
+        while not exit:
+            event, filename = self.window.Read()
+            if len(filename) == 2 and event == 'Submit' or event == 'Cancel':
+                exit = True
+            print(filename[0])
+            print(filename[1])
+
+        self.window.Close()
+        # if file_ext is None:
+        #     return filename
+        # elif file_ext is not None and file_ext in filename:
+        #     return filename
+        # else:
+        #     return None
+
+
+class WStarting(__DefaultWindow__):
+    def __init__(self, title=__title__):
+        super(WStarting, self).__init__(title)
         self.seconds = 24
         self.paused = False
         self.layout = [[sg.Frame(title='Additional options:', layout=[
@@ -62,11 +107,10 @@ class StartingWindow:
 
         self.window = None
         self.progress_bar = None
-        self.create()
+        self.launch()
 
-    def create(self):
-        sg.ChangeLookAndFeel('Reddit')
-        self.window = sg.Window(self.tittle, self.layout, location=(800, 400))
+    def launch(self):
+        super.launch()
         self.progress_bar = self.window.FindElement('countdown')
         # TODO: implement by state machine
         while self.seconds > 0:
@@ -98,6 +142,7 @@ class StartingWindow:
     def __click_load__(self):
         print("Pushed load button")
         self.paused = True
+        self.toLoad()
         pass
 
     def __click_start_component__(self):
@@ -116,14 +161,30 @@ class StartingWindow:
             self.__click_start_component__()
 
 
-class Window:
-    def __init__(self, tittle_window=__tittle__, presenter=None):
-        self.tittle = tittle_window
-        self.presenter = presenter
+class WException(__DefaultWindow__):
+    def __init__(self, title=__title__):
+        super(WException, self).__init__(title)
+        self.seconds = 5
+        self.layout = [[sg.Frame(title='Additional options:', layout=[
+            [sg.Button(button_text='Watch Live', key='watch_live', size=(10, 1), font=('wingdings', 14)),
+             sg.Button(button_text='Load File', key='load_file', size=(10, 1), font=('wingdings', 14)), ]],
+                                 size=(25, 3), relief=sg.RELIEF_SUNKEN)],
+                       [sg.Button(button_text='Start Component', key='start_component', size=(16, 1),
+                                  font=('wingdings', 14))],
+                       [sg.Text('The component will start automatically', auto_size_text=True,
+                                justification='left')],
+                       [sg.ProgressBar(max_value=self.seconds, key='countdown', orientation='h', size=(20, 20))],
+                       [sg.Button(button_text='Exit', key='Exit', size=(10, 1), font=('verdana', 14)), ]]
+
+
+class WWatchLive(__DefaultWindow__):
+    def __init__(self, title=__title__, presenter=None):
+        super(WWatchLive, self).__init__(title)
+        self.title = title
         self.paused = True
         self.image2D = True
         self.exit = False
-        self.layout = [[sg.Text(tittle_window, size=(40, 1), justification='center', font=('wingdings', 20))],
+        self.layout = [[sg.Text(title, size=(40, 1), justification='center', font=('wingdings', 20))],
                        [sg.Button(button_text='2D', key='2D', size=(3, 1), font=('wingdings', 14)),
                         sg.Button(button_text='3D', key='3D', size=(3, 1), font=('wingdings', 14)), ],
                        [sg.Image(filename='', key='image_color'),
@@ -141,9 +202,8 @@ class Window:
                         sg.Button(button_text='Exit', key='Exit', size=(10, 1), font=('verdana', 14)), ]]
         self.window = None
 
-    def create(self):
-        sg.ChangeLookAndFeel('Reddit')
-        self.window = sg.Window(self.tittle, self.layout, location=(800, 400))
+    def launch(self):
+        self.window = sg.Window(self.title, self.layout, location=(800, 400))
         self.refresh()
         self.__click_stop__()
 
@@ -246,12 +306,14 @@ if __name__ == '__main__':
     # print(value)
 
     # TwoFramesWindow()
+    #
+    # filename = PopupChooseFile('Choose a 3D image file to read:')
+    # print(filename)
+    #
+    # starting = StartingWindow()
+    # window = Window()
+    # window.launch()
+    # while not window.__getattribute__('exit'):
+    #     window.refresh()
 
-    filename = PopupChooseFile('Choose a 3D image file to read:')
-    print(filename)
-
-    starting = StartingWindow()
-    window = Window()
-    window.create()
-    while not window.__getattribute__('exit'):
-        window.refresh()
+    WChooseFiles()
