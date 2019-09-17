@@ -1,13 +1,15 @@
 import sys
-from abc import ABC
-
 import cv2
 import numpy as np
 import time
 
+from src.Model.AppState import AppState, STATE_WATCHER, STATE_LOADER, STATE_COMPONENT
+
 if sys.version_info[0] < 3:
     import PySimpleGUI27 as sg
+    from abc import ABCMeta as ABC
 else:
+    from abc import ABC
     import PySimpleGUI as sg
 
 __title__ = "LambScan"
@@ -113,12 +115,12 @@ class WStarting(__DefaultWindow__):
         super.launch()
         self.progress_bar = self.window.FindElement('countdown')
         # TODO: implement by state machine
-        while self.seconds > 0:
+        while self.seconds > 0 and not self.paused:
             time.sleep(1)
             self.refresh()
             self.seconds -= 1
-            if self.paused:
-                break
+            # if self.paused:
+            #     break
         if not self.paused:
             self.__click_start_component__()
 
@@ -136,19 +138,25 @@ class WStarting(__DefaultWindow__):
 
     def __click_watch__(self):
         print("Pushed watch button")
+        state = AppState()
+        state.paused = True
+        state.transition = STATE_WATCHER
         self.paused = True
-        pass
 
     def __click_load__(self):
         print("Pushed load button")
+        state = AppState()
+        state.paused = True
+        state.transition = STATE_LOADER
         self.paused = True
         self.toLoad()
-        pass
 
     def __click_start_component__(self):
         print("Pushed start component button")
+        state = AppState()
+        state.paused = True
+        state.transition = STATE_COMPONENT
         self.paused = True
-        pass
 
     def __handle_event__(self, event):
         if event == 'Exit' or event is None:
