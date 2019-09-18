@@ -16,26 +16,26 @@ class FrameProcessor:
         self.decimate = 1
         self.scale = True
         self.color = True
-        self.__image2D__ = True  # True: image2D, False: image3D
+        self.image2D = True  # True: image2D, False: image3D
 
-    def is2DMode(self):
-        return self.__image2D__
-
-    def is3DMode(self):
-        return not self.__image2D__
-
-    def changeMode(self, image2D=None, image3D=False):
-        """
-        Changes to process the image as two 2D images or combine them and process as one 3D image
-        It processes by default the 2D image
-        :param image2D: True process 2D image, False process 3D image
-        :param image3D: param image2D has priority over this param, this is the opposite of it
-        :return:
-        """
-        if image2D is not None:
-            self.__image2D__ = image2D
-        else:
-            self.__image2D__ = not image3D
+    # def is2DMode(self):
+    #     return self.image2D
+    #
+    # def is3DMode(self):
+    #     return not self.image2D
+    #
+    # def changeMode(self, image2D=None, image3D=False):
+    #     """
+    #     Changes to process the image as two 2D images or combine them and process as one 3D image
+    #     It processes by default the 2D image
+    #     :param image2D: True process 2D image, False process 3D image
+    #     :param image3D: param image2D has priority over this param, this is the opposite of it
+    #     :return:
+    #     """
+    #     if image2D is not None:
+    #         self.image2D = image2D
+    #     else:
+    #         self.image2D = not image3D
 
     def reset(self):
         self.pitch, self.yaw, self.distance = 0, 0, 2
@@ -57,7 +57,7 @@ class FrameProcessor:
         depth_image = np.asanyarray(depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
 
-        if self.__image2D__:
+        if self.image2D:
             return color_image, depth_image
         else:
 

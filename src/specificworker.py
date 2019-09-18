@@ -35,7 +35,7 @@ class SpecificWorker(GenericWorker):
         super(SpecificWorker, self).__init__(proxy_map)
         self.Period = 2000
         self.timer.start(self.Period)
-        self.state = None
+        state = None
 
         self.global_machine.start()
 
@@ -58,13 +58,16 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_starting(self):
         print("Entered state starting")
-        self.state = AppState()
-        result = self.state.starting()
+        state = AppState()
+        result = state.starting()
         if result == STATE_COMPONENT:
+            state.window.close()
             self.startingtocomponent.emit()
         elif result == STATE_WATCHER:
+            state.window.close()
             self.startingtowatch_live.emit()
         elif result == STATE_LOADER:
+            state.window.close()
             self.startingtoload_image.emit()
         pass
 
@@ -74,7 +77,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_component(self):
         print("Entered state component")
-        pass
 
     #
     # sm_exception_handler
@@ -82,7 +84,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_exception_handler(self):
         print("Entered state exception_handler")
-        pass
 
     #
     # sm_load_image
@@ -90,7 +91,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_load_image(self):
         print("Entered state load_image")
-        pass
 
     #
     # sm_watch_live
@@ -98,11 +98,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_watch_live(self):
         print("Entered state watch_live")
-        self.state.watcher()
-
-        self.load_streams_state.emit()
-
-        pass
 
     #
     # sm_the_end
@@ -110,23 +105,25 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_the_end(self):
         print("Entered state the_end")
-        pass
 
     #
+    # Initial State of Watch_Live
     # sm_load_streams
     #
     @QtCore.Slot()
     def sm_load_streams(self):
         print("Entered state load_streams")
-        pass
-
+        state = AppState()
+        state.refresh()
+        self.load_streamstoget_frames.emit()
     #
+    # Watch_Live
     # sm_get_frames
     #
     @QtCore.Slot()
     def sm_get_frames(self):
         print("Entered state get_frames")
-        pass
+
 
     #
     # sm_save_frames
@@ -134,7 +131,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_save_frames(self):
         print("Entered state save_frames")
-        pass
 
     #
     # sm_close
@@ -142,7 +138,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_close(self):
         print("Entered state close")
-        pass
 
 # =================================================================
 # =================================================================

@@ -132,21 +132,18 @@ class WStarting(__DefaultWindow__):
 
     def __click_exit__(self):
         print("EXIT button pressed")
-        self.paused = True
         self.window.Close()
         pass
 
     def __click_watch__(self):
         print("Pushed watch button")
         state = AppState()
-        state.paused = True
         state.transition = STATE_WATCHER
         self.paused = True
 
     def __click_load__(self):
         print("Pushed load button")
         state = AppState()
-        state.paused = True
         state.transition = STATE_LOADER
         self.paused = True
         self.toLoad()
@@ -154,7 +151,6 @@ class WStarting(__DefaultWindow__):
     def __click_start_component__(self):
         print("Pushed start component button")
         state = AppState()
-        state.paused = True
         state.transition = STATE_COMPONENT
         self.paused = True
 
@@ -257,7 +253,7 @@ class WWatchLive(__DefaultWindow__):
     def __click_exit__(self):
         print("EXIT button pressed")
         self.exit = True
-        self.window.Close()
+        # self.window.Close()
 
     def __click_stop__(self):
         img = np.full((480, 640), 255)
