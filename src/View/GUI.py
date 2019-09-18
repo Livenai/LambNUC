@@ -2,15 +2,15 @@ import sys
 import cv2
 import numpy as np
 import time
-
-from src.Model.AppState import AppState, STATE_WATCHER, STATE_LOADER, STATE_COMPONENT
+import abc
+# from src.Model.AppState import AppState, STATE_WATCHER, STATE_LOADER, STATE_COMPONENT
 
 if sys.version_info[0] < 3:
     import PySimpleGUI27 as sg
-    from abc import ABCMeta as ABC
+    ABC = abc.ABCMeta
 else:
-    from abc import ABC
     import PySimpleGUI as sg
+    ABC = abc.ABC
 
 __title__ = "LambScan"
 

@@ -21,13 +21,16 @@
 
 from genericworker import *
 
-# If RoboComp was compiled with Python bindings you can use InnerModel in Python
-from src.Model.AppState import AppState, STATE_COMPONENT, STATE_LOADER, STATE_WATCHER
+if sys.version_info[0] < 3:
+    from Model.AppState import AppState, STATE_COMPONENT, STATE_LOADER, STATE_WATCHER
+else:
+    from src.Model.AppState import AppState, STATE_COMPONENT, STATE_LOADER, STATE_WATCHER
 
-sys.path.append('/opt/robocomp/lib')
-import librobocomp_qmat
-import librobocomp_osgviewer
-import librobocomp_innermodel
+# If RoboComp was compiled with Python bindings you can use InnerModel in Python
+# sys.path.append('/opt/robocomp/lib')
+# import librobocomp_qmat
+# import librobocomp_osgviewer
+# import librobocomp_innermodel
 
 
 class SpecificWorker(GenericWorker):

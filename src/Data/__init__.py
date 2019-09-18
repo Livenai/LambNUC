@@ -1,5 +1,10 @@
-from src.Data.FrameProcessor import FrameProcessor
-from src.Data.RSCamera import RSCamera
+import sys
+if sys.version_info[0] < 3:
+    from Data.FrameProcessor import FrameProcessor
+    from Data.RSCamera import RSCamera
+else:
+    from src.Data.FrameProcessor import FrameProcessor
+    from src.Data.RSCamera import RSCamera
 
 if __name__ == '__main__':
     camera = RSCamera()

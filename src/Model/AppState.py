@@ -1,5 +1,10 @@
-from src.Data import RSCamera, FrameProcessor
-from src.View.GUI import WWatchLive, WStarting
+import sys
+if sys.version_info[0] < 3:
+    from Data import RSCamera, FrameProcessor
+    from View.GUI import WWatchLive, WStarting
+else:
+    from src.Data import RSCamera, FrameProcessor
+    from src.View.GUI import WWatchLive, WStarting
 import functools
 
 STATE_COMPONENT = "COMPONENT"
