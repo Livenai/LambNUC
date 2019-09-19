@@ -1,7 +1,7 @@
 import sys
 if sys.version_info[0] < 3:
-    from Data import RSCamera, FrameProcessor
-    from View.GUI import WWatchLive, WStarting
+    from src.Data import RSCamera, FrameProcessor
+    from src.View.GUI import *
 else:
     from src.Data import RSCamera, FrameProcessor
     from src.View.GUI import WWatchLive, WStarting

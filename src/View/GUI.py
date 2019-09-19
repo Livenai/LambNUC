@@ -2,15 +2,15 @@ import sys
 import cv2
 import numpy as np
 import time
-import abc
-# from src.Model.AppState import AppState, STATE_WATCHER, STATE_LOADER, STATE_COMPONENT
+# import abc
+from src.Model.AppState import AppState, STATE_WATCHER, STATE_LOADER, STATE_COMPONENT
 
 if sys.version_info[0] < 3:
     import PySimpleGUI27 as sg
-    ABC = abc.ABCMeta
+    # ABC = abc.ABCMeta
 else:
     import PySimpleGUI as sg
-    ABC = abc.ABC
+    # ABC = abc.ABC
 
 __title__ = "LambScan"
 
@@ -36,7 +36,8 @@ def PopupChooseFile(text_message):
     return filename
 
 
-class __DefaultWindow__(ABC):
+# class __DefaultWindow__(ABC):
+class __DefaultWindow__(object):
     def __init__(self, title=__title__):
         sg.ChangeLookAndFeel('Reddit')
         self.layout = []
@@ -46,8 +47,8 @@ class __DefaultWindow__(ABC):
         self.events = []
 
     def launch(self):
-        self.close = self.window.Close
         self.window = sg.Window(self.title, self.layout, location=(800, 400))
+        self.close = self.window.Close
 
 
 class WLoadImage(__DefaultWindow__):
@@ -112,7 +113,7 @@ class WStarting(__DefaultWindow__):
         self.launch()
 
     def launch(self):
-        super.launch()
+        super(WStarting, self).launch()
         self.progress_bar = self.window.FindElement('countdown')
         # TODO: implement by state machine
         while self.seconds > 0 and not self.paused:
