@@ -22,9 +22,10 @@
 from genericworker import *
 
 if sys.version_info[0] < 3:
-    from Model.AppState import AppState, STATE_COMPONENT, STATE_LOADER, STATE_WATCHER
+    from Model.AppState import AppState
 else:
-    from src.Model.AppState import AppState, STATE_COMPONENT, STATE_LOADER, STATE_WATCHER
+    from src.Model.AppState import AppState
+
 
 # If RoboComp was compiled with Python bindings you can use InnerModel in Python
 # sys.path.append('/opt/robocomp/lib')
@@ -38,12 +39,13 @@ class SpecificWorker(GenericWorker):
         super(SpecificWorker, self).__init__(proxy_map)
         self.Period = 2000
         self.timer.start(self.Period)
-        state = None
+        self.state = AppState()
 
         self.global_machine.start()
 
     def __del__(self):
         print 'SpecificWorker destructor'
+
 
     def setParams(self, params):
         # try:
@@ -61,18 +63,11 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_starting(self):
         print("Entered state starting")
-        state = AppState()
-        result = state.starting()
-        if result == STATE_COMPONENT:
-            state.window.close()
-            self.startingtocomponent.emit()
-        elif result == STATE_WATCHER:
-            state.window.close()
-            self.startingtowatch_live.emit()
-        elif result == STATE_LOADER:
-            state.window.close()
-            self.startingtoload_image.emit()
-        pass
+        transition = self.state.starting()
+        if transition is None:
+            self.startingtothe_end.emit()
+        else:
+            transition(self)
 
     #
     # sm_component
@@ -108,6 +103,8 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_the_end(self):
         print("Entered state the_end")
+        from PySide2.QtWidgets import QApplication
+        QApplication.quit()
 
     #
     # Initial State of Watch_Live
@@ -116,9 +113,10 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_load_streams(self):
         print("Entered state load_streams")
-        state = AppState()
-        state.refresh()
+        self.state.watcher()
+        # state.refresh()
         self.load_streamstoget_frames.emit()
+
     #
     # Watch_Live
     # sm_get_frames
@@ -126,7 +124,7 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_get_frames(self):
         print("Entered state get_frames")
-
+        self.state.refresh(self.state)
 
     #
     # sm_save_frames

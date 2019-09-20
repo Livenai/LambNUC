@@ -1,18 +1,24 @@
-from src.View.GUI import WStarting, WChooseFiles, WLoadImage
-
+def EXIT(self):
+    if self.state.window is not None:
+        self.state.window.close()
+    self.startingtothe_end.emit()
 
 def StartingW2Component(self):
-    pass
+    if self.state.window is not None:
+        self.state.window.close()
+    self.startingtocomponent.emit()
 
 
 def StartingW2Watch(self):
-    pass
+    if self.state.window is not None:
+        self.state.window.close()
+    self.startingtowatch_live.emit()
 
 
 def StartingW2Load(self):
-    self.close()
-    WChooseFiles()
-    pass
+    if self.state.window is not None:
+        self.state.window.close()
+    self.startingtoload_image.emit()
 
 
 def LoadW2LoadPLY(self):
@@ -34,11 +40,3 @@ def LoadPNGs2Open3D(self):
 def LoadPNGs2Load(self):
     pass
 
-
-WStarting.toComponent = StartingW2Component
-WStarting.toWatch = StartingW2Watch
-WStarting.toLoad = StartingW2Load
-WLoadImage.toChoose = LoadW2LoadPNGs
-
-if __name__ == '__main__':
-    window = WStarting()

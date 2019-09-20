@@ -2,6 +2,7 @@ import sys
 if sys.version_info[0] < 3:
     from src.Data import RSCamera, FrameProcessor
     from src.View.GUI import *
+    from src.View.Transitions import *
 else:
     from src.Data import RSCamera, FrameProcessor
     from src.View.GUI import WWatchLive, WStarting
@@ -10,6 +11,7 @@ import functools
 STATE_COMPONENT = "COMPONENT"
 STATE_LOADER = "LOAD"
 STATE_WATCHER = "WATCH"
+EXIT = "EXIT"
 
 # class Borg:
 #     __shared_state = {}
@@ -48,28 +50,28 @@ class AppState:
         self.image2D = True
         self.recording = 0
         self.window = None
-        self.processor = None
+        self.processor = []
         self.cams = []
         self.refresh = None
 
     def starting(self):
-        # self.cams = [RSCamera()]
-        # self.processor = FrameProcessor()
-        #
-        #
         self.window = WStarting()
-        self.window.launch()
+        transition = self.window.launch()
+        if transition is not None:
+            return transition
+        else:
+            return False
 
     def close(self):
         self.window.close()
         for cam in self.cams:
             cam.stop()
         self.cams = []
-        self.processor
+        self.processor = []
 
     def watcher(self):
         self.cams = [RSCamera()]
-        self.processor = FrameProcessor()
+        self.processor = FrameProcessor(self.cams[0])
         self.window = WWatchLive()
         self.window.launch()
 
@@ -81,23 +83,56 @@ class AppState:
                 self.window.refresh()
                 if not self.stopped:
                     color_frame, depth_frame = camera.get_frame()
-                    result = processor.process(color_frame, depth_frame)
-                    if self.image2D and type(result) is tuple and len(result) == 2 and processor.image2D():
+                    result = self.processor.process(color_frame, depth_frame)
+                    if self.image2D and type(result) is tuple and len(result) == 2 and self.processor.image2D:
                         color_image, depth_image = result
-                        window.update_image(image_color=color_image, depth_image=depth_image)
-                    elif not processor.image2D:
-                        window.update_image(image_3D=result)
+                        self.window.update_image(image_color=color_image, depth_image=depth_image)
+                    elif not self.processor.image2D:
+                        self.window.update_image(image_3D=result)
                 else:
                     color_frame, depth_frame = camera.get_frame()
-                    result = processor.process(color_frame, depth_frame)
-                    if type(result) is tuple and len(result) == 2 and processor.image2D:
+                    result = self.processor.process(color_frame, depth_frame)
+                    if type(result) is tuple and len(result) == 2 and self.processor.image2D:
                         color_image, depth_image = result
-                        window.update_image(image_color=color_image, depth_image=depth_image)
-                    elif not processor.image2D:
-                        window.update_image(image_3D=result)
+                        self.window.update_image(image_color=color_image, depth_image=depth_image)
+                    elif not self.processor.image2D:
+                        self.window.update_image(image_3D=result)
 
 
         self.refresh = get_frame
+
+    # def watcher(self):
+    #     self.cams = [RSCamera(), RSCamera()]
+    #     self.processor = FrameProcessor(self.cams[0])
+    #     self.processor = FrameProcessor(self.cams[1])
+    #     self.window = WWatchLive()
+    #     self.window.launch()
+    #
+    #     def get_frame(self):
+    #         camera = self.cams[0]
+    #         camera.start()
+    #
+    #         while not self.window.exit:
+    #             self.window.refresh()
+    #             if not self.stopped:
+    #                 color_frame, depth_frame = camera.get_frame()
+    #                 result = processor.process(color_frame, depth_frame)
+    #                 if self.image2D and type(result) is tuple and len(result) == 2 and processor.image2D():
+    #                     color_image, depth_image = result
+    #                     window.update_image(image_color=color_image, depth_image=depth_image)
+    #                 elif not processor.image2D:
+    #                     window.update_image(image_3D=result)
+    #             else:
+    #                 color_frame, depth_frame = camera.get_frame()
+    #                 result = processor.process(color_frame, depth_frame)
+    #                 if type(result) is tuple and len(result) == 2 and processor.image2D:
+    #                     color_image, depth_image = result
+    #                     window.update_image(image_color=color_image, depth_image=depth_image)
+    #                 elif not processor.image2D:
+    #                     window.update_image(image_3D=result)
+    #
+    #
+    #     self.refresh = get_frame
 
 
 def cams():

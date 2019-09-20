@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 import time
 # import abc
-from src.Model.AppState import AppState, STATE_WATCHER, STATE_LOADER, STATE_COMPONENT
+# from src.Model.AppState import AppState
+from src.View.Transitions import *
 
 if sys.version_info[0] < 3:
     import PySimpleGUI27 as sg
@@ -41,6 +42,7 @@ class __DefaultWindow__(object):
     def __init__(self, title=__title__):
         sg.ChangeLookAndFeel('Reddit')
         self.layout = []
+        self.transition = None
         self.title = title
         self.window = None
         self.close = None
@@ -110,12 +112,11 @@ class WStarting(__DefaultWindow__):
 
         self.window = None
         self.progress_bar = None
-        self.launch()
+        # self.launch()
 
     def launch(self):
         super(WStarting, self).launch()
         self.progress_bar = self.window.FindElement('countdown')
-        # TODO: implement by state machine
         while self.seconds > 0 and not self.paused:
             time.sleep(1)
             self.refresh()
@@ -124,6 +125,7 @@ class WStarting(__DefaultWindow__):
             #     break
         if not self.paused:
             self.__click_start_component__()
+        return self.transition
 
     def refresh(self):
         event, values = self.window.Read(timeout=20)
@@ -133,26 +135,22 @@ class WStarting(__DefaultWindow__):
 
     def __click_exit__(self):
         print("EXIT button pressed")
-        self.window.Close()
-        pass
+        self.transition = EXIT
+        self.paused = True
 
     def __click_watch__(self):
         print("Pushed watch button")
-        state = AppState()
-        state.transition = STATE_WATCHER
+        self.transition = StartingW2Watch
         self.paused = True
 
     def __click_load__(self):
         print("Pushed load button")
-        state = AppState()
-        state.transition = STATE_LOADER
+        self.transition = StartingW2Load
         self.paused = True
-        self.toLoad()
 
     def __click_start_component__(self):
         print("Pushed start component button")
-        state = AppState()
-        state.transition = STATE_COMPONENT
+        self.transition = StartingW2Component
         self.paused = True
 
     def __handle_event__(self, event):
@@ -209,7 +207,7 @@ class WWatchLive(__DefaultWindow__):
 
     def launch(self):
         self.window = sg.Window(self.title, self.layout, location=(800, 400))
-        self.refresh()
+        # self.refresh()
         self.__click_stop__()
 
     def refresh(self):
