@@ -66,7 +66,7 @@ class AppState:
             return False
 
     def close(self):
-        if self.state.window is not None:
+        if self.window is not None:
             self.window.close()
             for cam in self.cams:
                 cam.stop()
