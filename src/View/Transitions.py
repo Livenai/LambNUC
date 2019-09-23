@@ -1,6 +1,5 @@
 def EXIT(self):
-    if self.state.window is not None:
-        self.state.window.close()
+    self.state.close()
     self.apptothe_end.emit()
 
 

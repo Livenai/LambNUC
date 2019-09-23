@@ -56,6 +56,8 @@ class AppState:
         self.refresh = None
 
     def starting(self):
+        self.refresh = None
+        self.recording = 0
         self.window = WStarting()
         transition = self.window.launch()
         if transition is not None:
@@ -64,13 +66,16 @@ class AppState:
             return False
 
     def close(self):
-        self.window.close()
-        for cam in self.cams:
-            cam.stop()
+        if self.state.window is not None:
+            self.window.close()
+            for cam in self.cams:
+                cam.stop()
         self.cams = []
         self.processor = []
 
     def watcher(self):
+        self.refresh = None
+        self.recording = 0
         self.cams = [RSCamera()]
         self.processor = FrameProcessor(self.cams[0])
         self.window = WWatchLive()
@@ -87,9 +92,9 @@ class AppState:
                 if self.image2D and type(result) is tuple and len(result) == 2 and self.processor.image2D:
                     color_image, depth_image = result
                     if self.recording > 0:
-                        self.recording -= 1
                         if self.recording % 2 == 1:
                             save_frames(color_image, depth_image, id_crotal)
+                        self.recording -= 1
                     self.window.update_image(image_color=color_image, depth_image=depth_image)
                 elif not self.processor.image2D:
                     self.window.update_image(image_3D=result)

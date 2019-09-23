@@ -15,33 +15,36 @@ def get_items_in_dir(my_path=""):
     return files
 
 
-def save_frames(color_frame, depth_frame, id_crotal):
+def save_frames(color_frame, depth_frame, id_crotal, cam="cam01"):
     ts = time.time()
     if id_crotal is not None:
+        # own path in savings, lamb crotal
         mypath = os.path.join(os.getcwd(), "savings", id_crotal)
-        # date_day = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H:%M')
-        # # date_time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
         if not os.path.exists(mypath):
             os.makedirs(mypath)
-        # TODO
-        dirname = str("_{}".format(date.today()))
+        dirname = str(date.today())
+        # path with date
         mypath = os.path.join(mypath, dirname)
         if not os.path.exists(mypath):
             os.makedirs(mypath)
 
-        dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
-                              [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))]),
-                          default=0) + 1)
 
-        mypath = os.path.join(mypath, dirname)
-        if not os.path.exists(mypath):
-            os.makedirs(mypath)
+        # number of collections of the lamb
+        # dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
+        #                       [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))]),
+        #                   default=0) + 1)
+        # mypath = os.path.join(mypath, dirname)
+        # if not os.path.exists(mypath):
+        #     os.makedirs(mypath)
 
-        # TODO : save files
+        # Save files
         filename = os.path.join(mypath, "{}_".format(datetime.fromtimestamp(ts)))
-        cv2.imwrite(filename=(filename + "color.png"), img=color_frame)
-        cv2.imwrite(filename=(filename + "depth.png"), img=depth_frame)
-
+        correct, filename = is_new_file_correct(filename)
+        if correct:
+            cv2.imwrite(filename=(filename + cam + "_color.png"), img=color_frame)
+            cv2.imwrite(filename=(filename + cam + "_depth.png"), img=depth_frame)
+        else:
+            raise Exception("filename incorrect!!")
     return
 
 
@@ -65,13 +68,13 @@ def record_frames(color_frame, depth_frame, frames_saved, id_crotal_aux):
                           "RGBDIJ_lamb_{}.mine".format(datetime.fromtimestamp(ts)))
 
     # Save RGBDIJ file
-    RGBDIJ.save_file(color_image, depth_image, mypath)
+    RGBDIJ.save_file(color_frame, depth_frame, mypath)
 
     # Save PNG (RGB) file
     mypath = mypath.replace("RGBDIJ", "PNG").replace(".mine", ".png")
     correct, mypath = is_new_file_correct(mypath)
     if correct:
-        cv2.imwrite(str(mypath.format(datetime.fromtimestamp(ts))), color_image)
+        cv2.imwrite(str(mypath.format(datetime.fromtimestamp(ts))), color_frame)
     return frames_saved, id_crotal_aux
 
 

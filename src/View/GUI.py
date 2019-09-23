@@ -309,17 +309,10 @@ class WWatchLive(__DefaultWindow__):
                         sg.Button(button_text='Pause', key='Pause', size=(7, 1), font=('Verdana', 14)),
                         sg.Button(button_text='Stop', key='Stop', size=(7, 1), font=('Verdana', 14))],
                        [sg.Button(button_text='Save PNG', key='Save_PNG', size=(10, 1), font=('verdana', 14)),
-                        sg.Button(button_text='Save Both', key='Save_Both', size=(10, 1), font=('verdana', 14)),
                         sg.Button(button_text='Take Frames', key='Take_Frames', size=(10, 1), font=('verdana', 14)),
                         sg.Button(button_text='Save PLY', key='Save_PLY', size=(10, 1), font=('verdana', 14)),
                         sg.Button(button_text='Exit', key='Exit', size=(10, 1), font=('verdana', 14)), ]]
         self.window = None
-
-    # def launch(self):
-    #     super(WWatchLive, self).launch()
-    # self.window = sg.Window(self.title, self.layout, location=(800, 400))
-    # self.refresh()
-    # self.__click_stop__()
 
     def refresh(self):
         event, values = self.window.Read(timeout=20)
@@ -346,20 +339,21 @@ class WWatchLive(__DefaultWindow__):
                 print("ERROR")
 
     # TODO: complete
-    def __click_2D__(self):
-        self.image2D = True
-        self.window.FindElement('image_color').Update(visible=True)
-        self.window.FindElement('image_depth').Update(visible=True)
-        self.window.FindElement('image_3D').Update(visible=False)
-
-    # TODO: complete
-    def __click_3D__(self):
-        self.image2D = False
-        self.window.FindElement('image_color').Update(visible=False)
-        self.window.FindElement('image_depth').Update(visible=False)
-        self.window.FindElement('image_3D').Update(visible=True)
+    # def __click_2D__(self):
+    #     self.image2D = True
+    #     self.window.FindElement('image_color').Update(visible=True)
+    #     self.window.FindElement('image_depth').Update(visible=True)
+    #     self.window.FindElement('image_3D').Update(visible=False)
+    #
+    # # TODO: complete
+    # def __click_3D__(self):
+    #     self.image2D = False
+    #     self.window.FindElement('image_color').Update(visible=False)
+    #     self.window.FindElement('image_depth').Update(visible=False)
+    #     self.window.FindElement('image_3D').Update(visible=True)
 
     def __click_stop__(self):
+        self.paused = True
         img = np.full((480, 640), 255)
         imgbytes = cv2.imencode('.png', img)[1].tobytes()  # this is faster, shorter and needs less includes
         self.window.FindElement('image_color').Update(data=imgbytes)
@@ -371,21 +365,16 @@ class WWatchLive(__DefaultWindow__):
         self.window.FindElement('Start').Update(visible=False)
         self.window.FindElement('Resume').Update(visible=True)
 
-    # TODO : complete
     def __click_save_PNG__(self):
+        print("save PNGs")
         return GetFrame2SaveFrame
 
-    # TODO : complete
-    def __click_save_both__(self):
-        return GetFrame2SaveFrame
-
-    # TODO : complete
     def __click_take_frames__(self):
         return GetFrame2TakeFrames
 
-    # TODO : complete
     def __click_save_PLY__(self):
-        pass
+        print("save PLY")
+        print("Not implemented yet")
 
     def __handle_event__(self, event):
         if event == 'Exit' or event is None:
@@ -399,13 +388,16 @@ class WWatchLive(__DefaultWindow__):
             return self.__click_stop__()
         elif event == 'Save_PNG':
             return self.__click_save_PNG__()
-        elif event == 'Save_Both':
-            return self.__click_save_both__()
         elif event == 'Take_Frames':
             return self.__click_take_frames__()
         elif event == 'Save_PLY':
             return self.__click_save_PLY__()
         return Frame2FrameLoop
+
+
+# TODO: 2 cams with cropped images: 4 frameWindows? or 8frameWindows
+class TestingWindow(__DefaultWindow__):
+    pass
 
 
 if __name__ == '__main__':

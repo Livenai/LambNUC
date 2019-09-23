@@ -24,14 +24,13 @@ Application
 
 :component
 {
-    states getting_frames, handling_events;
+    states getting_frames;
     initial_state loading_streams;
     end_state closing;
     transitions
     {
         loading_streams => getting_frames;
-        getting_frames => getting_frames, handling_events;
-        handling_events => loading_streams, closing;
+        getting_frames => getting_frames, closing;
     };
 };
 

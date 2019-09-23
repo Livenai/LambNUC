@@ -69,9 +69,7 @@ class GenericWorker(QtCore.QObject):
 	exception_handlertowatch_live = QtCore.Signal()
 	loading_streamstogetting_frames = QtCore.Signal()
 	getting_framestogetting_frames = QtCore.Signal()
-	getting_framestohandling_events = QtCore.Signal()
-	handling_eventstoloading_streams = QtCore.Signal()
-	handling_eventstoclosing = QtCore.Signal()
+	getting_framestoclosing = QtCore.Signal()
 	ask_filetolaunch_window = QtCore.Signal()
 	watch_inittoget_frames = QtCore.Signal()
 	get_framestoget_frames = QtCore.Signal()
@@ -107,7 +105,6 @@ class GenericWorker(QtCore.QObject):
 
 
 		self.getting_frames_state = QtCore.QState(self.component_state)
-		self.handling_events_state = QtCore.QState(self.component_state)
 		self.loading_streams_state = QtCore.QState(self.component_state)
 
 		self.closing_state = QtCore.QFinalState(self.component_state)
@@ -145,9 +142,7 @@ class GenericWorker(QtCore.QObject):
 		self.exception_handler_state.addTransition(self.exception_handlertowatch_live, self.watch_live_state)
 		self.loading_streams_state.addTransition(self.loading_streamstogetting_frames, self.getting_frames_state)
 		self.getting_frames_state.addTransition(self.getting_framestogetting_frames, self.getting_frames_state)
-		self.getting_frames_state.addTransition(self.getting_framestohandling_events, self.handling_events_state)
-		self.handling_events_state.addTransition(self.handling_eventstoloading_streams, self.loading_streams_state)
-		self.handling_events_state.addTransition(self.handling_eventstoclosing, self.closing_state)
+		self.getting_frames_state.addTransition(self.getting_framestoclosing, self.closing_state)
 		self.ask_file_state.addTransition(self.ask_filetolaunch_window, self.launch_window_state)
 		self.watch_init_state.addTransition(self.watch_inittoget_frames, self.get_frames_state)
 		self.get_frames_state.addTransition(self.get_framestoget_frames, self.get_frames_state)
@@ -164,7 +159,6 @@ class GenericWorker(QtCore.QObject):
 		self.loading_streams_state.entered.connect(self.sm_loading_streams)
 		self.closing_state.entered.connect(self.sm_closing)
 		self.getting_frames_state.entered.connect(self.sm_getting_frames)
-		self.handling_events_state.entered.connect(self.sm_handling_events)
 		self.ask_file_state.entered.connect(self.sm_ask_file)
 		self.launch_window_state.entered.connect(self.sm_launch_window)
 		self.watch_init_state.entered.connect(self.sm_watch_init)
@@ -238,11 +232,6 @@ class GenericWorker(QtCore.QObject):
 	@QtCore.Slot()
 	def sm_getting_frames(self):
 		print "Error: lack sm_getting_frames in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_handling_events(self):
-		print "Error: lack sm_handling_events in Specificworker"
 		sys.exit(-1)
 
 	@QtCore.Slot()

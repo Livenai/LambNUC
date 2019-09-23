@@ -70,6 +70,9 @@ class SpecificWorker(GenericWorker):
         from PySide2.QtWidgets import QApplication
         QApplication.quit()
 
+    # --------------------------------------------------------------------- #
+    # ----------------------  APP   --------------------------------------- #
+
     #
     # sm_app_init
     #
@@ -83,14 +86,6 @@ class SpecificWorker(GenericWorker):
             transition(self)
 
     #
-    # sm_component
-    #
-    @QtCore.Slot()
-    def sm_component(self):
-        print("Entered state component")
-        pass
-
-    #
     # sm_exception_handler
     #
     @QtCore.Slot()
@@ -98,20 +93,15 @@ class SpecificWorker(GenericWorker):
         print("Entered state exception_handler")
         pass
 
-    #
-    # sm_load_image
-    #
-    @QtCore.Slot()
-    def sm_load_image(self):
-        print("Entered state load_image")
-        pass
+    # --------------------------------------------------------------------- #
+    # ----------------------  COMPONENT   --------------------------------- #
 
     #
-    # sm_watch_live
+    # sm_component
     #
     @QtCore.Slot()
-    def sm_watch_live(self):
-        print("Entered state watch_live")
+    def sm_component(self):
+        print("Entered state component")
         pass
 
     #
@@ -128,15 +118,15 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_getting_frames(self):
         print("Entered state getting_frames")
-        pass
-
-    #
-    # sm_handling_events
-    #
-    @QtCore.Slot()
-    def sm_handling_events(self):
-        print("Entered state handling_events")
-        pass
+        try:
+            condition = True
+            if condition:
+                self.getting_framestogetting_frames.emit()
+            else:
+                self.getting_framestoclosing.emit()
+        except Exception as e:
+            print("ERROR: {}".format(e))
+            self.componenttoexception_handler.emit()
 
     #
     # sm_closing
@@ -144,6 +134,18 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_closing(self):
         print("Entered state closing")
+        self.state.close()
+        self.componenttoapp_init.emit()
+
+    # --------------------------------------------------------------------- #
+    # ----------------------  LOAD IMAGE   -------------------------------- #
+
+    #
+    # sm_load_image
+    #
+    @QtCore.Slot()
+    def sm_load_image(self):
+        print("Entered state load_image")
         pass
 
     #
@@ -162,14 +164,29 @@ class SpecificWorker(GenericWorker):
         print("Entered state launch_window")
         pass
 
+    # --------------------------------------------------------------------- #
+    # ----------------------    WATCH LIVE    ----------------------------- #
+
+    #
+    # sm_watch_live
+    #
+    @QtCore.Slot()
+    def sm_watch_live(self):
+        print("Entered state watch_live")
+        pass
+
     #
     # sm_watch_init
     #
     @QtCore.Slot()
     def sm_watch_init(self):
         print("Entered state watch_init")
-        self.state.watcher()
-        self.watch_inittoget_frames.emit()
+        try:
+            self.state.watcher()
+            self.watch_inittoget_frames.emit()
+        except Exception as e:
+            print("ERROR: {}".format(e))
+            self.watch_livetoexception_handler.emit()
 
     #
     # sm_get_frames
@@ -177,11 +194,15 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_get_frames(self):
         print("Entered state get_frames")
-        transition = self.state.refresh(self.state)
-        if transition is None:
-            self.apptothe_end.emit()
-        else:
-            transition(self)
+        try:
+            transition = self.state.refresh(self.state)
+            if transition is None:
+                self.get_framestoclose.emit()
+            else:
+                transition(self)
+        except Exception as e:
+            print("ERROR: {}".format(e))
+            self.watch_livetoexception_handler.emit()
 
     #
     # sm_close
@@ -189,7 +210,8 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_close(self):
         print("Entered state close")
-        pass
+        self.state.close()
+        self.watch_livetoapp_init.emit()
 
 # =================================================================
 # =================================================================
