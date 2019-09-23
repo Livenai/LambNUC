@@ -1,4 +1,7 @@
 import sys
+
+from src.Data.FileManager import save_frames
+
 if sys.version_info[0] < 3:
     from src.Data import RSCamera, FrameProcessor
     from src.View.GUI import *
@@ -13,14 +16,12 @@ STATE_LOADER = "LOAD"
 STATE_WATCHER = "WATCH"
 EXIT = "EXIT"
 
+
 # class Borg:
 #     __shared_state = {}
 #
 #     def __init__(self):
 #         self.__dict__ = self.__shared_state
-
-
-
 
 
 def singleton(cls):
@@ -75,29 +76,35 @@ class AppState:
         self.window = WWatchLive()
         self.window.launch()
 
-        def get_frame(self):
+        def get_frame(self, id_crotal="random"):
             camera = self.cams[0]
             camera.start()
 
-            while not self.window.exit:
-                self.window.refresh()
-                if not self.stopped:
-                    color_frame, depth_frame = camera.get_frame()
-                    result = self.processor.process(color_frame, depth_frame)
-                    if self.image2D and type(result) is tuple and len(result) == 2 and self.processor.image2D:
-                        color_image, depth_image = result
-                        self.window.update_image(image_color=color_image, depth_image=depth_image)
-                    elif not self.processor.image2D:
-                        self.window.update_image(image_3D=result)
-                else:
-                    color_frame, depth_frame = camera.get_frame()
-                    result = self.processor.process(color_frame, depth_frame)
-                    if type(result) is tuple and len(result) == 2 and self.processor.image2D:
-                        color_image, depth_image = result
-                        self.window.update_image(image_color=color_image, depth_image=depth_image)
-                    elif not self.processor.image2D:
-                        self.window.update_image(image_3D=result)
-
+            transition = self.window.refresh()
+            if not self.stopped:
+                color_frame, depth_frame = camera.get_frame()
+                result = self.processor.process(color_frame, depth_frame)
+                if self.image2D and type(result) is tuple and len(result) == 2 and self.processor.image2D:
+                    color_image, depth_image = result
+                    if self.recording > 0:
+                        self.recording -= 1
+                        if self.recording % 2 == 1:
+                            save_frames(color_image, depth_image, id_crotal)
+                    self.window.update_image(image_color=color_image, depth_image=depth_image)
+                elif not self.processor.image2D:
+                    self.window.update_image(image_3D=result)
+                    if self.recording > 0:
+                        self.recording -= 1
+                        # save_frames(color_image, depth_image, "random")
+            else:
+                color_frame, depth_frame = camera.get_frame()
+                result = self.processor.process(color_frame, depth_frame)
+                if type(result) is tuple and len(result) == 2 and self.processor.image2D:
+                    color_image, depth_image = result
+                    self.window.update_image(image_color=color_image, depth_image=depth_image)
+                elif not self.processor.image2D:
+                    self.window.update_image(image_3D=result)
+            return transition
 
         self.refresh = get_frame
 

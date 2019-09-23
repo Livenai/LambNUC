@@ -1,24 +1,39 @@
 def EXIT(self):
     if self.state.window is not None:
         self.state.window.close()
-    self.startingtothe_end.emit()
+    self.apptothe_end.emit()
+
 
 def StartingW2Component(self):
     if self.state.window is not None:
         self.state.window.close()
-    self.startingtocomponent.emit()
+    self.app_inittocomponent.emit()
 
 
 def StartingW2Watch(self):
     if self.state.window is not None:
         self.state.window.close()
-    self.startingtowatch_live.emit()
+    self.app_inittowatch_live.emit()
 
 
 def StartingW2Load(self):
     if self.state.window is not None:
         self.state.window.close()
-    self.startingtoload_image.emit()
+    self.app_inittoload_image.emit()
+
+
+def Frame2FrameLoop(self):
+    self.get_framestoget_frames.emit()
+
+
+def GetFrame2SaveFrame(self):
+    self.state.recording = 1
+    Frame2FrameLoop(self)
+
+
+def GetFrame2TakeFrames(self):
+    self.state.recording = 60
+    Frame2FrameLoop(self)
 
 
 def LoadW2LoadPLY(self):
@@ -39,4 +54,3 @@ def LoadPNGs2Open3D(self):
 
 def LoadPNGs2Load(self):
     pass
-

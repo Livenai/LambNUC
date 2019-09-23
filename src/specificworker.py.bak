@@ -33,16 +33,19 @@ else:
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
 
+
 class SpecificWorker(GenericWorker):
     def __init__(self, proxy_map):
         super(SpecificWorker, self).__init__(proxy_map)
         self.Period = 2000
         self.timer.start(self.Period)
         self.state = AppState()
-        self.Application.start()
+
+        self.global_machine.start()
 
     def __del__(self):
         print 'SpecificWorker destructor'
+
 
     def setParams(self, params):
         # try:
@@ -55,30 +58,14 @@ class SpecificWorker(GenericWorker):
     # =============== Slots methods for State Machine ===================
     # ===================================================================
     #
-    # sm_app
+    # sm_starting
     #
     @QtCore.Slot()
-    def sm_app(self):
-        pass
-
-    #
-    # sm_app_end
-    #
-    @QtCore.Slot()
-    def sm_the_end(self):
-        print("Entered state app_end")
-        from PySide2.QtWidgets import QApplication
-        QApplication.quit()
-
-    #
-    # sm_app_init
-    #
-    @QtCore.Slot()
-    def sm_app_init(self):
-        print("Entered state app_init")
+    def sm_starting(self):
+        print("Entered state starting")
         transition = self.state.starting()
         if transition is None:
-            self.apptothe_end.emit()
+            self.startingtothe_end.emit()
         else:
             transition(self)
 
@@ -88,7 +75,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_component(self):
         print("Entered state component")
-        pass
 
     #
     # sm_exception_handler
@@ -96,7 +82,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_exception_handler(self):
         print("Entered state exception_handler")
-        pass
 
     #
     # sm_load_image
@@ -104,7 +89,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_load_image(self):
         print("Entered state load_image")
-        pass
 
     #
     # sm_watch_live
@@ -112,76 +96,42 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_watch_live(self):
         print("Entered state watch_live")
-        pass
 
     #
-    # sm_loading_streams
+    # sm_the_end
     #
     @QtCore.Slot()
-    def sm_loading_streams(self):
-        print("Entered state loading_streams")
-        pass
+    def sm_the_end(self):
+        print("Entered state the_end")
+        from PySide2.QtWidgets import QApplication
+        QApplication.quit()
 
     #
-    # sm_getting_frames
+    # Initial State of Watch_Live
+    # sm_load_streams
     #
     @QtCore.Slot()
-    def sm_getting_frames(self):
-        print("Entered state getting_frames")
-        pass
-
-    #
-    # sm_handling_events
-    #
-    @QtCore.Slot()
-    def sm_handling_events(self):
-        print("Entered state handling_events")
-        pass
-
-    #
-    # sm_closing
-    #
-    @QtCore.Slot()
-    def sm_closing(self):
-        print("Entered state closing")
-        pass
-
-    #
-    # sm_ask_file
-    #
-    @QtCore.Slot()
-    def sm_ask_file(self):
-        print("Entered state ask_file")
-        pass
-
-    #
-    # sm_launch_window
-    #
-    @QtCore.Slot()
-    def sm_launch_window(self):
-        print("Entered state launch_window")
-        pass
-
-    #
-    # sm_watch_init
-    #
-    @QtCore.Slot()
-    def sm_watch_init(self):
-        print("Entered state watch_init")
+    def sm_load_streams(self):
+        print("Entered state load_streams")
         self.state.watcher()
-        self.watch_inittoget_frames.emit()
+        # state.refresh()
+        self.load_streamstoget_frames.emit()
 
     #
+    # Watch_Live
     # sm_get_frames
     #
     @QtCore.Slot()
     def sm_get_frames(self):
         print("Entered state get_frames")
-        transition = self.state.refresh(self.state)
-        if transition is None:
-            self.apptothe_end.emit()
-        else:
-            transition(self)
+        self.state.refresh(self.state)
+
+    #
+    # sm_save_frames
+    #
+    @QtCore.Slot()
+    def sm_save_frames(self):
+        print("Entered state save_frames")
 
     #
     # sm_close
@@ -189,7 +139,6 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_close(self):
         print("Entered state close")
-        pass
 
 # =================================================================
 # =================================================================

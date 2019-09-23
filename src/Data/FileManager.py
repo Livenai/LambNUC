@@ -24,7 +24,7 @@ def save_frames(color_frame, depth_frame, id_crotal):
         if not os.path.exists(mypath):
             os.makedirs(mypath)
         # TODO
-        dirname = date.today()
+        dirname = str("_{}".format(date.today()))
         mypath = os.path.join(mypath, dirname)
         if not os.path.exists(mypath):
             os.makedirs(mypath)
@@ -42,9 +42,7 @@ def save_frames(color_frame, depth_frame, id_crotal):
         cv2.imwrite(filename=(filename + "color.png"), img=color_frame)
         cv2.imwrite(filename=(filename + "depth.png"), img=depth_frame)
 
-        frames_saved += 1
-
-    return frames_saved, id_crotal
+    return
 
 
 # TODO
