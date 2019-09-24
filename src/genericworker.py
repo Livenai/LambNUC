@@ -70,7 +70,6 @@ class GenericWorker(QtCore.QObject):
 	loading_streamstogetting_frames = QtCore.Signal()
 	getting_framestogetting_frames = QtCore.Signal()
 	getting_framestoclosing = QtCore.Signal()
-	ask_filetolaunch_window = QtCore.Signal()
 	watch_inittoget_frames = QtCore.Signal()
 	get_framestoget_frames = QtCore.Signal()
 	get_framestoclose = QtCore.Signal()
@@ -111,12 +110,6 @@ class GenericWorker(QtCore.QObject):
 
 
 
-		self.launch_window_state = QtCore.QState(self.load_image_state)
-		self.ask_file_state = QtCore.QState(self.load_image_state)
-
-
-
-
 		self.get_frames_state = QtCore.QState(self.watch_live_state)
 		self.watch_init_state = QtCore.QState(self.watch_live_state)
 
@@ -143,7 +136,6 @@ class GenericWorker(QtCore.QObject):
 		self.loading_streams_state.addTransition(self.loading_streamstogetting_frames, self.getting_frames_state)
 		self.getting_frames_state.addTransition(self.getting_framestogetting_frames, self.getting_frames_state)
 		self.getting_frames_state.addTransition(self.getting_framestoclosing, self.closing_state)
-		self.ask_file_state.addTransition(self.ask_filetolaunch_window, self.launch_window_state)
 		self.watch_init_state.addTransition(self.watch_inittoget_frames, self.get_frames_state)
 		self.get_frames_state.addTransition(self.get_framestoget_frames, self.get_frames_state)
 		self.get_frames_state.addTransition(self.get_framestoclose, self.close_state)
@@ -159,8 +151,6 @@ class GenericWorker(QtCore.QObject):
 		self.loading_streams_state.entered.connect(self.sm_loading_streams)
 		self.closing_state.entered.connect(self.sm_closing)
 		self.getting_frames_state.entered.connect(self.sm_getting_frames)
-		self.ask_file_state.entered.connect(self.sm_ask_file)
-		self.launch_window_state.entered.connect(self.sm_launch_window)
 		self.watch_init_state.entered.connect(self.sm_watch_init)
 		self.close_state.entered.connect(self.sm_close)
 		self.get_frames_state.entered.connect(self.sm_get_frames)
@@ -168,7 +158,6 @@ class GenericWorker(QtCore.QObject):
 		self.Application.setInitialState(self.app_state)
 		self.app_state.setInitialState(self.app_init_state)
 		self.component_state.setInitialState(self.loading_streams_state)
-		self.load_image_state.setInitialState(self.ask_file_state)
 		self.watch_live_state.setInitialState(self.watch_init_state)
 
 #------------------
@@ -242,16 +231,6 @@ class GenericWorker(QtCore.QObject):
 	@QtCore.Slot()
 	def sm_closing(self):
 		print "Error: lack sm_closing in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_launch_window(self):
-		print "Error: lack sm_launch_window in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_ask_file(self):
-		print "Error: lack sm_ask_file in Specificworker"
 		sys.exit(-1)
 
 	@QtCore.Slot()

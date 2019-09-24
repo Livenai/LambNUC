@@ -146,23 +146,12 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_load_image(self):
         print("Entered state load_image")
-        pass
-
-    #
-    # sm_ask_file
-    #
-    @QtCore.Slot()
-    def sm_ask_file(self):
-        print("Entered state ask_file")
-        pass
-
-    #
-    # sm_launch_window
-    #
-    @QtCore.Slot()
-    def sm_launch_window(self):
-        print("Entered state launch_window")
-        pass
+        self.state.loader()
+        transition = None
+        while transition is None:
+            transition = self.state.refresh()
+        self.state.close()
+        transition(self)
 
     # --------------------------------------------------------------------- #
     # ----------------------    WATCH LIVE    ----------------------------- #

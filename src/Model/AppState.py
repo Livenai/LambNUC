@@ -113,39 +113,13 @@ class AppState:
 
         self.refresh = get_frame
 
-    # def watcher(self):
-    #     self.cams = [RSCamera(), RSCamera()]
-    #     self.processor = FrameProcessor(self.cams[0])
-    #     self.processor = FrameProcessor(self.cams[1])
-    #     self.window = WWatchLive()
-    #     self.window.launch()
-    #
-    #     def get_frame(self):
-    #         camera = self.cams[0]
-    #         camera.start()
-    #
-    #         while not self.window.exit:
-    #             self.window.refresh()
-    #             if not self.stopped:
-    #                 color_frame, depth_frame = camera.get_frame()
-    #                 result = processor.process(color_frame, depth_frame)
-    #                 if self.image2D and type(result) is tuple and len(result) == 2 and processor.image2D():
-    #                     color_image, depth_image = result
-    #                     window.update_image(image_color=color_image, depth_image=depth_image)
-    #                 elif not processor.image2D:
-    #                     window.update_image(image_3D=result)
-    #             else:
-    #                 color_frame, depth_frame = camera.get_frame()
-    #                 result = processor.process(color_frame, depth_frame)
-    #                 if type(result) is tuple and len(result) == 2 and processor.image2D:
-    #                     color_image, depth_image = result
-    #                     window.update_image(image_color=color_image, depth_image=depth_image)
-    #                 elif not processor.image2D:
-    #                     window.update_image(image_3D=result)
-    #
-    #
-    #     self.refresh = get_frame
+    def loader(self):
+        self.refresh = None
+        self.recording = 0
+        self.window = WImageLoaded()
+        self.window.launch()
 
+        self.refresh = self.window.refresh
 
 def cams():
     camera = RSCamera()
