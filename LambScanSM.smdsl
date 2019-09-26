@@ -4,7 +4,7 @@ Application
     end_state the_end;
     transitions
     {
-        app => the_end;
+        app => app, the_end;
     };
 };
 
@@ -15,10 +15,10 @@ Application
     transitions
     {
         app_init => component, load_image, watch_live, exception_handler;
-        component => app_init, exception_handler;
-        load_image => app_init, exception_handler;
-        watch_live => app_init, exception_handler;
-        exception_handler => app_init, component, load_image, watch_live;
+        component => exception_handler;
+        load_image => exception_handler;
+        watch_live => exception_handler;
+        exception_handler => component, load_image, watch_live;
     };
 };
 

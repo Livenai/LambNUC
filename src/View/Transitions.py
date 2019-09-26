@@ -1,3 +1,6 @@
+from src.Data import frequency, num_frames
+
+
 def EXIT(self):
     self.state.close()
     self.apptothe_end.emit()
@@ -31,7 +34,7 @@ def GetFrame2SaveFrame(self):
 
 
 def GetFrame2TakeFrames(self):
-    self.state.recording = 60
+    self.state.recording = num_frames * frequency
     Frame2FrameLoop(self)
 
 

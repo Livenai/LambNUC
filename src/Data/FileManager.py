@@ -6,6 +6,10 @@ import cv2
 import numpy as np
 
 
+class FileManager(Exception):
+    pass
+
+
 # system navigation
 def get_items_in_dir(my_path=""):
     my_path = os.getcwd() if my_path == "" or my_path is None else my_path
@@ -19,32 +23,71 @@ def save_frames(color_frame, depth_frame, id_crotal, cam="cam01"):
     ts = time.time()
     if id_crotal is not None:
         # own path in savings, lamb crotal
-        mypath = os.path.join(os.getcwd(), "savings", id_crotal)
-        if not os.path.exists(mypath):
-            os.makedirs(mypath)
-        dirname = str(date.today())
-        # path with date
-        mypath = os.path.join(mypath, dirname)
+        # mypath = os.path.join(os.getcwd(), "savings", id_crotal)
+        mypath = os.path.join(os.getcwd(), "savings")
         if not os.path.exists(mypath):
             os.makedirs(mypath)
 
+        path_color = ("savings", "color", date.today())
+        path_color = ("savings", "d", date.today())
 
-        # number of collections of the lamb
-        # dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
-        #                       [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))]),
-        #                   default=0) + 1)
-        # mypath = os.path.join(mypath, dirname)
-        # if not os.path.exists(mypath):
-        #     os.makedirs(mypath)
+        def mkdirs(paths):
+            path = os.getcwd()
+            for folder in paths:
+                path = os.path.join(path, str(folder))
+                if not os.path.exists(path):
+                    os.mkdir(path)
+            return path
 
-        # Save files
-        filename = os.path.join(mypath, "{}_".format(datetime.fromtimestamp(ts)))
+        path_color = mkdirs(("savings", "color", date.today()))
+        path_depth = mkdirs(("savings", "depth", date.today()))
+
+        filename = os.path.join(path_color, "{}_{}_{}.png".format(datetime.fromtimestamp(ts), cam, "color"))
+
+        # path_1 = os.path.join(os.getcwd(), "savings", "{}".format(frame_type),
+        #                       str(date.today()), "{}.png".format(datetime.fromtimestamp(ts)))
+        #
+        # path_2 = os.path.join(os.getcwd(), "savings", "{}".format(frame_type),
+        #                       str(date.today()), "{}.png".format(datetime.fromtimestamp(ts)))
+        #
+        # path_color = os.path.join(mypath, "color")
+        # path_depth = os.path.join(mypath, "depth")
+        # if not os.path.exists(path_color):
+        #     os.makedirs(path_color)
+        # if not os.path.exists(path_depth):
+        #     os.makedirs(path_depth)
+        #
+        # dirname = str(date.today())
+        # # path with date
+        # path_color = os.path.join(path_color, dirname)
+        # path_depth = os.path.join(path_depth, dirname)
+        # if not os.path.exists(path_color):
+        #     os.makedirs(path_color)
+        # if not os.path.exists(path_depth):
+        #     os.makedirs(path_depth)
+        #
+        # # number of collections of the lamb
+        # # dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
+        # #                       [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))]),
+        # #                   default=0) + 1)
+        # # mypath = os.path.join(mypath, dirname)
+        # # if not os.path.exists(mypath):
+        # #     os.makedirs(mypath)
+        #
+        # # Save files
+        # path_color = os.path.join(path_color, "{}_".format(datetime.fromtimestamp(ts)))
+        # path_depth = os.path.join(path_depth, "{}_".format(datetime.fromtimestamp(ts)))
         correct, filename = is_new_file_correct(filename)
         if correct:
             cv2.imwrite(filename=(filename + cam + "_color.png"), img=color_frame)
+        else:
+            raise FileManager("filename incorrect!!")
+        filename = filename.replace("color", "depth")
+        correct, filename = is_new_file_correct(filename)
+        if correct:
             cv2.imwrite(filename=(filename + cam + "_depth.png"), img=depth_frame)
         else:
-            raise Exception("filename incorrect!!")
+            raise FileManager("filename incorrect!!")
     return
 
 
@@ -211,22 +254,6 @@ def load_csv(file):
                     print("{0}}: Column names are {1}}\n".format(line_count, row))
                     line_count += 1
             print("Processed {} lines.\n".format(line_count))
-
-
-# def load_csv(file):
-#     correct, file = is_file_correct(file)
-#     if correct and os.path.exists(file):
-#         with open(file) as f:
-#             reader = csv.reader(f, delimiter=',')
-#             line_count = 0
-#             for row in reader:
-#                 if line_count == 0:
-#                     print(f'Column names are {", ".join(row)}')
-#                     line_count += 1
-#                 else:
-#                     print(f'{line_count}.:  {", ".join(row)}')
-#                     line_count += 1
-#             print(f'Processed {line_count} lines.')
 
 
 def create_csv():

@@ -151,7 +151,8 @@ class SpecificWorker(GenericWorker):
         while transition is None:
             transition = self.state.refresh()
         self.state.close()
-        transition(self)
+        self.apptoapp.emit()
+        # transition(self)
 
     # --------------------------------------------------------------------- #
     # ----------------------    WATCH LIVE    ----------------------------- #
@@ -200,7 +201,7 @@ class SpecificWorker(GenericWorker):
     def sm_close(self):
         print("Entered state close")
         self.state.close()
-        self.watch_livetoapp_init.emit()
+        self.apptoapp.emit()
 
 # =================================================================
 # =================================================================

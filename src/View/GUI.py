@@ -60,7 +60,7 @@ class __DefaultWindow__(object):
 
 
 class WImageLoaded(__DefaultWindow__):
-    def __init__(self, title=__title__, presenter=None):
+    def __init__(self, title=__title__):
         super(WImageLoaded, self).__init__(title)
         self.title = title
         self.paused = True
@@ -95,6 +95,13 @@ class WImageLoaded(__DefaultWindow__):
             event, values = self.window.Read()
             return self.__handle_event__(event, values)
 
+    def __click_stop__(self):
+        self.paused = True
+        img = np.full((480, 640), 255)
+        imgbytes = cv2.imencode(".png", img)[1].tobytes()  # this is faster, shorter and needs less includes
+        self.window.FindElement("RGB_img").Update(data=imgbytes)
+        self.window.FindElement("RGB_img").Update(data=imgbytes)
+
     def __click_submitRGB__(self, filename):
         if "color.png" in filename["InputRGB"]:
             im = cv2.imread(filename["InputRGB"])
@@ -114,7 +121,8 @@ class WImageLoaded(__DefaultWindow__):
 
     def __click_submitDepth__(self, filename):
         if "depth.png" in filename["InputDepth"]:
-            im = cv2.imread(filename["InputDepth"])
+            # cv2.imread(filename, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
+            im = cv2.imread(filename["InputDepth"], cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
             depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(im, alpha=0.03), cv2.COLORMAP_JET)
             imgbytes_depth = cv2.imencode(".png", depth_colormap)[1].tobytes()
             self.window.FindElement("Depth_img").Update(data=imgbytes_depth)
@@ -140,48 +148,38 @@ class WImageLoaded(__DefaultWindow__):
         elif event == "SubmitDepth":
             print("imput depth")
             return self.__click_submitDepth__(filename)
+        elif event == "Stop":
+            self.paused = True
+            return self.__click_stop__()
         return None
 
 
-class WLoadImage(__DefaultWindow__):
-    def __init__(self, title=__title__):
-        super(WLoadImage, self).__init__(title)
-        self.layout = [[sg.Button(button_text="PLY / PCD", key="ply", size=(5, 1), font=("wingdings", 14))],
-                       [sg.Button(button_text="PNGs", key="pngs", size=(5, 1), font=("wingdings", 14))]]
-        self.window = sg.Window(title, self.layout, location=(800, 400))
-        event, value = self.window.Read()
-        if event == "ply":
-            filename = PopupChooseFile(text_message="Choose a PointCloud file:")
-        elif event == "pngs":
-            self.toChoose()
-
-
-class WChooseFiles(__DefaultWindow__):
-    def __init__(self, title=__title__):
-        super(WChooseFiles, self).__init__(title)
-        self.layout = [
-            [sg.Text("File RGB:", size=(10, 1)), sg.Input(), sg.FileBrowse()],
-            [sg.Text("File Depth:", size=(10, 1)), sg.Input(), sg.FileBrowse()],
-            [sg.Submit(), sg.Cancel()],
-            [sg.Text("", key="error_text", text_color="red", size=(20, 1), visible=False)]]
-
-        self.window = sg.Window("Read files", self.layout, location=(800, 400))
-
-        exit = False
-        while not exit:
-            event, filename = self.window.Read()
-            if len(filename) == 2 and event == "Submit" or event == "Cancel":
-                exit = True
-            print(filename[0])
-            print(filename[1])
-
-        self.window.Close()
-        # if file_ext is None:
-        #     return filename
-        # elif file_ext is not None and file_ext in filename:
-        #     return filename
-        # else:
-        #     return None
+# class WChooseFiles(__DefaultWindow__):
+#     def __init__(self, title=__title__):
+#         super(WChooseFiles, self).__init__(title)
+#         self.layout = [
+#             [sg.Text("File RGB:", size=(10, 1)), sg.Input(), sg.FileBrowse()],
+#             [sg.Text("File Depth:", size=(10, 1)), sg.Input(), sg.FileBrowse()],
+#             [sg.Submit(), sg.Cancel()],
+#             [sg.Text("", key="error_text", text_color="red", size=(20, 1), visible=False)]]
+#
+#         self.window = sg.Window("Read files", self.layout, location=(800, 400))
+#
+#         exit = False
+#         while not exit:
+#             event, filename = self.window.Read()
+#             if len(filename) == 2 and event == "Submit" or event == "Cancel":
+#                 exit = True
+#             print(filename[0])
+#             print(filename[1])
+#
+#         self.window.Close()
+#         # if file_ext is None:
+#         #     return filename
+#         # elif file_ext is not None and file_ext in filename:
+#         #     return filename
+#         # else:
+#         #     return None
 
 
 class WStarting(__DefaultWindow__):
@@ -248,24 +246,24 @@ class WStarting(__DefaultWindow__):
             self.__click_start_component__()
 
 
-class WException(__DefaultWindow__):
-    def __init__(self, title=__title__):
-        super(WException, self).__init__(title)
-        self.seconds = 5
-        self.layout = [[sg.Frame(title="Additional options:", layout=[
-            [sg.Button(button_text="Watch Live", key="watch_live", size=(10, 1), font=("wingdings", 14)),
-             sg.Button(button_text="Load File", key="load_file", size=(10, 1), font=("wingdings", 14)), ]],
-                                 size=(25, 3), relief=sg.RELIEF_SUNKEN)],
-                       [sg.Button(button_text="Start Component", key="start_component", size=(16, 1),
-                                  font=("wingdings", 14))],
-                       [sg.Text("The component will start automatically", auto_size_text=True,
-                                justification="left")],
-                       [sg.ProgressBar(max_value=self.seconds, key="countdown", orientation="h", size=(20, 20))],
-                       [sg.Button(button_text="Exit", key="Exit", size=(10, 1), font=("verdana", 14)), ]]
+# class WException(__DefaultWindow__):
+#     def __init__(self, title=__title__):
+#         super(WException, self).__init__(title)
+#         self.seconds = 5
+#         self.layout = [[sg.Frame(title="Additional options:", layout=[
+#             [sg.Button(button_text="Watch Live", key="watch_live", size=(10, 1), font=("wingdings", 14)),
+#              sg.Button(button_text="Load File", key="load_file", size=(10, 1), font=("wingdings", 14)), ]],
+#                                  size=(25, 3), relief=sg.RELIEF_SUNKEN)],
+#                        [sg.Button(button_text="Start Component", key="start_component", size=(16, 1),
+#                                   font=("wingdings", 14))],
+#                        [sg.Text("The component will start automatically", auto_size_text=True,
+#                                 justification="left")],
+#                        [sg.ProgressBar(max_value=self.seconds, key="countdown", orientation="h", size=(20, 20))],
+#                        [sg.Button(button_text="Exit", key="Exit", size=(10, 1), font=("verdana", 14)), ]]
 
 
 class WWatchLive(__DefaultWindow__):
-    def __init__(self, title=__title__, presenter=None):
+    def __init__(self, title=__title__):
         super(WWatchLive, self).__init__(title)
         self.title = title
         self.paused = True
@@ -334,9 +332,14 @@ class WWatchLive(__DefaultWindow__):
         print("save PLY")
         print("Not implemented yet")
 
+    def __click_close__(self):
+        return EXIT
+
     def __handle_event__(self, event):
-        if event == "Exit" or event is None:
+        if event == "Exit":
             return self.__click_exit__()
+        elif event is None:
+            return self.__click_close__
         elif event == "Start" or event == "Resume":
             return self.__click_start__()
         elif event == "Pause":
@@ -354,8 +357,99 @@ class WWatchLive(__DefaultWindow__):
 
 
 # TODO: 2 cams with cropped images: 4 frameWindows? or 8frameWindows
+
+# TODO: 1 cam with cropped images: 4 frameWindow (by the moment)
 class TestingWindow(__DefaultWindow__):
-    pass
+    def __init__(self, title=__title__):
+        super(TestingWindow, self).__init__(title)
+        self.title = title
+        self.paused = True
+        self.image2D = True
+        self.exit = False
+        self.layout = [[sg.Text(title, size=(40, 1), justification="center", font=("wingdings", 20))],
+                       [sg.Image(filename="", key="image_color"),
+                        sg.Image(filename="", key="image_depth")],
+                       [sg.Image(filename="", key="image_color_cropped"),
+                        sg.Image(filename="", key="image_depth_cropped")],
+                       [sg.Button(button_text="Start", key="Start", size=(7, 1), font=("wingdings", 14)),
+                        sg.Button(button_text="Resume", key="Resume", size=(7, 1), font=("wingdings", 14),
+                                  visible=False),
+                        sg.Button(button_text="Pause", key="Pause", size=(7, 1), font=("Verdana", 14)),
+                        sg.Button(button_text="Stop", key="Stop", size=(7, 1), font=("Verdana", 14))],
+                       [sg.Button(button_text="Save PNG", key="Save_PNG", size=(10, 1), font=("verdana", 14)),
+                        sg.Button(button_text="Take Frames", key="Take_Frames", size=(10, 1), font=("verdana", 14)),
+                        sg.Button(button_text="Save PLY", key="Save_PLY", size=(10, 1), font=("verdana", 14)),
+                        sg.Button(button_text="Exit", key="Exit", size=(10, 1), font=("verdana", 14)), ]]
+        self.window = None
+
+    def launch(self):
+        self.window = sg.Window(self.title, self.layout, location=(100, 150))
+        self.close = self.window.Close
+
+    def refresh(self):
+        event, values = self.window.Read(timeout=20)
+        return self.__handle_event__(event)
+
+    # TODO: complete
+    def update_image(self, image_color=None, depth_image=None, image_3D=None):
+        if self.image2D:
+            if image_color is not None and depth_image is not None:
+                # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
+                depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
+                imgbytes_color = cv2.imencode(".png", image_color)[1].tobytes()  # ditto
+                imgbytes_depth = cv2.imencode(".png", depth_colormap)[1].tobytes()  # ditto
+                self.window.FindElement("image_color").Update(data=imgbytes_color)
+                self.window.FindElement("image_depth").Update(data=imgbytes_depth)
+            else:
+                print("ERROR")
+        elif not self.image2D:
+            if image_3D is not None:
+                imgbytes_3D = cv2.imencode(".png", image_3D)[1].tobytes()  # ditto
+                self.window.FindElement("image_3D").Update(data=imgbytes_3D)
+            else:
+                print("ERROR")
+
+    def __click_stop__(self):
+        self.paused = True
+        img = np.full((480, 640), 255)
+        imgbytes = cv2.imencode(".png", img)[1].tobytes()  # this is faster, shorter and needs less includes
+        self.window.FindElement("image_color").Update(data=imgbytes)
+        self.window.FindElement("image_depth").Update(data=imgbytes)
+        self.window.FindElement("image_3D").Update(data=imgbytes)
+
+    def __click_start__(self):
+        self.paused = False
+        self.window.FindElement("Start").Update(visible=False)
+        self.window.FindElement("Resume").Update(visible=True)
+
+    def __click_save_PNG__(self):
+        print("save PNGs")
+        return GetFrame2SaveFrame
+
+    def __click_take_frames__(self):
+        return GetFrame2TakeFrames
+
+    def __click_save_PLY__(self):
+        print("save PLY")
+        print("Not implemented yet")
+
+    def __handle_event__(self, event):
+        if event == "Exit" or event is None:
+            return self.__click_exit__()
+        elif event == "Start" or event == "Resume":
+            return self.__click_start__()
+        elif event == "Pause":
+            self.paused = True
+        elif event == "Stop":
+            self.paused = True
+            return self.__click_stop__()
+        elif event == "Save_PNG":
+            return self.__click_save_PNG__()
+        elif event == "Take_Frames":
+            return self.__click_take_frames__()
+        elif event == "Save_PLY":
+            return self.__click_save_PLY__()
+        return Frame2FrameLoop
 
 
 if __name__ == "__main__":

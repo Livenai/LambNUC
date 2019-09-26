@@ -3,7 +3,7 @@ import sys
 from src.Data.FileManager import save_frames
 
 if sys.version_info[0] < 3:
-    from src.Data import RSCamera, FrameProcessor
+    from src.Data import RSCamera, FrameProcessor, frequency
     from src.View.GUI import *
     from src.View.Transitions import *
 else:
@@ -92,7 +92,7 @@ class AppState:
                 if self.image2D and type(result) is tuple and len(result) == 2 and self.processor.image2D:
                     color_image, depth_image = result
                     if self.recording > 0:
-                        if self.recording % 2 == 1:
+                        if self.recording % frequency == 1:
                             save_frames(color_image, depth_image, id_crotal)
                         self.recording -= 1
                     self.window.update_image(image_color=color_image, depth_image=depth_image)
@@ -120,6 +120,7 @@ class AppState:
         self.window.launch()
 
         self.refresh = self.window.refresh
+
 
 def cams():
     camera = RSCamera()
