@@ -1,6 +1,7 @@
 import sys
 
 from src.Data.FileManager import save_frames
+from src.Model import LambFilter
 
 if sys.version_info[0] < 3:
     from src.Data import RSCamera, FrameProcessor, frequency
@@ -9,7 +10,6 @@ if sys.version_info[0] < 3:
 else:
     from src.Data import RSCamera, FrameProcessor
     from src.View.GUI import WWatchLive, WStarting
-import functools
 
 STATE_COMPONENT = "COMPONENT"
 STATE_LOADER = "LOAD"
@@ -17,36 +17,9 @@ STATE_WATCHER = "WATCH"
 EXIT = "EXIT"
 
 
-# class Borg:
-#     __shared_state = {}
-#
-#     def __init__(self):
-#         self.__dict__ = self.__shared_state
-
-
-def singleton(cls):
-    """Make a class a Singleton class (only one instance)"""
-
-    @functools.wraps(cls)
-    def wrapper_singleton(*args, **kwargs):
-        if not wrapper_singleton.instance:
-            wrapper_singleton.instance = cls(*args, **kwargs)
-        return wrapper_singleton.instance
-
-    wrapper_singleton.instance = None
-    return wrapper_singleton
-
-
-# @singleton
-# class TheOne:
-#     pass
-
-@singleton
 class AppState:
-    # __shared_state = {}
-
     def __init__(self):
-        # self.__dict__ = self.__shared_state
+        self.state = "none"
         self.stopped = False
         self.image2D = True
         self.recording = 0
@@ -74,16 +47,17 @@ class AppState:
         self.processor = []
 
     def watcher(self):
+        self.state = STATE_WATCHER
         self.refresh = None
         self.recording = 0
-        self.cams = [RSCamera()]
-        self.processor = FrameProcessor(self.cams[0])
+        self.cams = [RSCamera.RSCamera()]
+        self.processor = FrameProcessor.FrameProcessor(self.cams[0])
         self.window = WWatchLive()
+        self.cams[0].start()
         self.window.launch()
 
         def get_frame(self, id_crotal="random"):
             camera = self.cams[0]
-            camera.start()
 
             transition = self.window.refresh()
             if not self.stopped:
@@ -114,6 +88,7 @@ class AppState:
         self.refresh = get_frame
 
     def loader(self):
+        self.state = STATE_LOADER
         self.refresh = None
         self.recording = 0
         self.window = WImageLoaded()
@@ -121,44 +96,51 @@ class AppState:
 
         self.refresh = self.window.refresh
 
+    def component(self):
+        self.state = STATE_COMPONENT
+        self.refresh = None
+        self.recording = 0
+        self.cams = [RSCamera.RSCamera()]
+        self.processor = FrameProcessor.FrameProcessor(self.cams[0])
+        self.cams[0].start()
 
-def cams():
-    camera = RSCamera()
-    processor = FrameProcessor(camera)
+        def get_frame(self, id_crotal="random"):
+            camera = self.cams[0]
 
-    camera.start()
-    color_frame, depth_frame = camera.get_frame()
-    result = processor.process(color_frame, depth_frame)
+            sleep = 0
+            transition = Frame2FrameLoop
+            if self.recording == 0:
+                sleep = np.random.random_integers(0, 5)
+                if sleep == 3:
+                    transition = GetFrame2SaveFrame
+                elif sleep == 4:
+                    transition = GetFrame2TakeFrames
+                elif sleep == 2:
+                    self.recording += 1
+                    sleep = 0
 
-    if type(result) is tuple and len(result) == 2 and processor.is2DMode():
-        color_image, depth_frame = result
-    elif processor.is3DMode():
-        image_3D = result
+            if not self.stopped:
+                # time.sleep(sleep)
+                color_frame, depth_frame = camera.get_frame()
+                result = self.processor.process(color_frame, depth_frame)
+                if self.image2D and type(result) is tuple and len(result) == 2 and self.processor.image2D:
+                    color_image, depth_image = result
+                    if self.recording > 0:
+                        if self.recording % frequency == 1:
+                            id_crotal = LambFilter.isThereALamb(color_image, depth_image)
+                            save_frames(color_image, depth_image, id_crotal)
+                        self.recording -= 1
+                elif not self.processor.image2D:
+                    if self.recording > 0:
+                        self.recording -= 1
+                        # save_frames(color_image, depth_image, "random")
+            else:
+                color_frame, depth_frame = camera.get_frame()
+                result = self.processor.process(color_frame, depth_frame)
+                if type(result) is tuple and len(result) == 2 and self.processor.image2D:
+                    color_image, depth_image = result
+                elif not self.processor.image2D:
+                    pass
+            return transition
 
-    camera.stop()
-
-
-if __name__ == '__main__':
-    camera = RSCamera()
-    processor = FrameProcessor(camera)
-
-    window = WWatchLive()
-
-    processor.changeMode(image3D=True)
-    window.image2D = False
-
-    camera.start()
-
-    window.launch()
-
-    while True:
-        window.refresh()
-        color_frame, depth_frame = camera.get_frame()
-        result = processor.process(color_frame, depth_frame)
-        if type(result) is tuple and len(result) == 2 and processor.is2DMode():
-            color_image, depth_image = result
-            window.update_image(image_color=color_image, depth_image=depth_image)
-        elif processor.is3DMode():
-            window.update_image(image_3D=result)
-
-    camera.stop()
+        self.refresh = get_frame

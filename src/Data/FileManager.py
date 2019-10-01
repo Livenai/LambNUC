@@ -19,28 +19,33 @@ def get_items_in_dir(my_path=""):
     return files
 
 
-def save_frames(color_frame, depth_frame, id_crotal, cam="cam01"):
+def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
     ts = time.time()
     if id_crotal is not None:
         # own path in savings, lamb crotal
         # mypath = os.path.join(os.getcwd(), "savings", id_crotal)
-        mypath = os.path.join(os.getcwd(), "savings")
-        if not os.path.exists(mypath):
-            os.makedirs(mypath)
+        # mypath = os.path.join(os.getcwd(), "savings")
+        # if not os.path.exists(mypath):
+        #     os.makedirs(mypath)
+        mypath = os.path.dirname(os.getcwd())
 
-        path_color = ("savings", "color", date.today())
-        path_color = ("savings", "d", date.today())
+        # path_color = ("savings", "color", date.today())
+        # path_color = ("savings", "depth", date.today())
 
-        def mkdirs(paths):
-            path = os.getcwd()
+        def mkdirs(current_path, paths):
+            path = current_path
             for folder in paths:
                 path = os.path.join(path, str(folder))
                 if not os.path.exists(path):
                     os.mkdir(path)
             return path
 
-        path_color = mkdirs(("savings", "color", date.today()))
-        path_depth = mkdirs(("savings", "depth", date.today()))
+        if id_crotal is None:
+            path_color = mkdirs(mypath, ("savings", "color", date.today()))
+            path_depth = mkdirs(mypath, ("savings", "depth", date.today()))
+        else:
+            path_color = mkdirs(mypath, ("savings", "color", id_crotal, date.today()))
+            path_depth = mkdirs(mypath, ("savings", "depth", id_crotal, date.today()))
 
         filename = os.path.join(path_color, "{}_{}_{}.png".format(datetime.fromtimestamp(ts), cam, "color"))
 
@@ -77,15 +82,16 @@ def save_frames(color_frame, depth_frame, id_crotal, cam="cam01"):
         # # Save files
         # path_color = os.path.join(path_color, "{}_".format(datetime.fromtimestamp(ts)))
         # path_depth = os.path.join(path_depth, "{}_".format(datetime.fromtimestamp(ts)))
+
         correct, filename = is_new_file_correct(filename)
         if correct:
-            cv2.imwrite(filename=(filename + cam + "_color.png"), img=color_frame)
+            cv2.imwrite(filename=filename, img=color_frame)
         else:
             raise FileManager("filename incorrect!!")
         filename = filename.replace("color", "depth")
         correct, filename = is_new_file_correct(filename)
         if correct:
-            cv2.imwrite(filename=(filename + cam + "_depth.png"), img=depth_frame)
+            cv2.imwrite(filename=filename, img=depth_frame)
         else:
             raise FileManager("filename incorrect!!")
     return

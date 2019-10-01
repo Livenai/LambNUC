@@ -22,7 +22,7 @@
 from genericworker import *
 
 if sys.version_info[0] < 3:
-    from Model.AppState import AppState
+    from Model.AppState import AppState, STATE_COMPONENT, STATE_WATCHER
 else:
     from src.Model.AppState import AppState
 
@@ -91,7 +91,12 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_exception_handler(self):
         print("Entered state exception_handler")
-        pass
+        if self.state.state == STATE_COMPONENT:
+            self.exception_handlertocomponent.emit()
+        elif self.state.state == STATE_WATCHER:
+            self.exception_handlertowatch_live.emit()
+        else:
+            self.apptothe_end.emit()
 
     # --------------------------------------------------------------------- #
     # ----------------------  COMPONENT   --------------------------------- #
@@ -110,7 +115,12 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_loading_streams(self):
         print("Entered state loading_streams")
-        pass
+        try:
+            self.state.component()
+            self.loading_streamstogetting_frames.emit()
+        except Exception as e:
+            print("ERROR: {}".format(e))
+            self.componenttoexception_handler.emit()
 
     #
     # sm_getting_frames
@@ -119,8 +129,8 @@ class SpecificWorker(GenericWorker):
     def sm_getting_frames(self):
         print("Entered state getting_frames")
         try:
-            condition = True
-            if condition:
+            transition = self.state.refresh(self.state)
+            if transition is not None:
                 self.getting_framestogetting_frames.emit()
             else:
                 self.getting_framestoclosing.emit()
@@ -176,6 +186,7 @@ class SpecificWorker(GenericWorker):
             self.watch_inittoget_frames.emit()
         except Exception as e:
             print("ERROR: {}".format(e))
+            print("assdlkfjañs")
             self.watch_livetoexception_handler.emit()
 
     #

@@ -1,36 +1,10 @@
 import numpy as np
 
-# TODO : determines an appropiate number (or let it be stablished by a configuration file)
+# Constants to filter and crop the numpy images
 __w_crop = 95
 __h_crop = 45
-__edged_RGB__ = 140
-# rgb
-# with lamb:
-# 167
-# 183
-# 197
-# with no lamb:
-# 41
-# 35
-# 51
-
-
-__edged_Depth__ = 1100  # no lamb > average > lamb
-
-
-# depth
-# with lamb:
-# 963
-# 962
-# 899
-# 904
-# 1044
-# 1042
-
-# no_lamb:
-# 1295
-# 1379
-# 1453
+__edged_RGB__ = 140 # no lamb > edged > lamb
+__edged_Depth__ = 1100  # no lamb > edged > lamb
 
 
 def filterColor(color_image):
@@ -54,31 +28,19 @@ def isThereALamb(color_image, depth_image):
     depth_result = isLamb(depth_image)
     if not (False in color_result or False in depth_result):
         print "There's a Lamb"
+        return "lamb"
     elif not (True in color_result or True in depth_result):
         print "There's nothing"
+        return "no_lamb"
     elif False not in depth_result:
         print "Probably a lamb"
+        return "probably"
     elif False not in color_result:
         print "Check_this"
+        return "check"
     else:
         print "Error"
-
-
-def isLamb(image, depth=False):
-    conf = (image, __w_crop, __h_crop, depth)
-    average_left = np.mean(__crop_left__(*conf))
-    average_center = np.mean(__crop_center__(*conf))
-    average_right = np.mean(__crop_right__(*conf))
-
-    if depth:
-        result = (average_left < __edged_Depth__,
-                  average_center < __edged_Depth__, average_right < __edged_Depth__)
-
-    else:
-        result = (average_left > __edged_RGB__,
-                  average_center > __edged_RGB__, average_right > __edged_RGB__)
-
-    return result
+        return "error"
 
 
 _startx = _starty = None
@@ -117,3 +79,20 @@ def __crop_right__(img, cropx, cropy, depth=False):
         startx, starty = _startx, _starty
     startx += 140
     return img[starty:starty + cropy, startx:startx + cropx]
+
+
+def isLamb(image, depth=False):
+    conf = (image, __w_crop, __h_crop, depth)
+    average_left = np.mean(__crop_left__(*conf))
+    average_center = np.mean(__crop_center__(*conf))
+    average_right = np.mean(__crop_right__(*conf))
+
+    if depth:
+        result = (average_left < __edged_Depth__,
+                  average_center < __edged_Depth__, average_right < __edged_Depth__)
+
+    else:
+        result = (average_left > __edged_RGB__,
+                  average_center > __edged_RGB__, average_right > __edged_RGB__)
+
+    return result
