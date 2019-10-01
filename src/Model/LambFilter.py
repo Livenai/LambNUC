@@ -3,7 +3,7 @@ import numpy as np
 # Constants to filter and crop the numpy images
 __w_crop = 95
 __h_crop = 45
-__edged_RGB__ = 140 # no lamb > edged > lamb
+__edged_RGB__ = 140  # no lamb > edged > lamb
 __edged_Depth__ = 1100  # no lamb > edged > lamb
 
 
@@ -25,17 +25,17 @@ def mustSave(color_image, depth_image):
 
 def isThereALamb(color_image, depth_image):
     color_result = isLamb(color_image)
-    depth_result = isLamb(depth_image)
+    depth_result = isLamb(depth_image, depth=True)
     if not (False in color_result or False in depth_result):
         print "There's a Lamb"
         return "lamb"
     elif not (True in color_result or True in depth_result):
         print "There's nothing"
         return "no_lamb"
-    elif False not in depth_result:
+    elif not (False in depth_result):
         print "Probably a lamb"
         return "probably"
-    elif False not in color_result:
+    elif not (False in color_result):
         print "Check_this"
         return "check"
     else:

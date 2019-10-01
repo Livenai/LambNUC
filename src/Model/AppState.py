@@ -120,7 +120,7 @@ class AppState:
                     sleep = 0
 
             if not self.stopped:
-                # time.sleep(sleep)
+                time.sleep(sleep * 900)  # random_number * 1/4 hour
                 color_frame, depth_frame = camera.get_frame()
                 result = self.processor.process(color_frame, depth_frame)
                 if self.image2D and type(result) is tuple and len(result) == 2 and self.processor.image2D:
