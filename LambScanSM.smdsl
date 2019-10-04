@@ -1,54 +1,48 @@
-global_machine
+Application
 {
-    states component, load_image, watch_live, exception_handler;
-    initial_state starting;
+    initial_state app;
     end_state the_end;
     transitions
     {
-        starting => component, load_image, watch_live, exception_handler, the_end;
-        component => starting, exception_handler, the_end;
-        load_image => starting, exception_handler, the_end;
-        watch_live => starting, exception_handler, the_end;
-        exception_handler => starting, component, load_image, watch_live;
+        app => app, the_end;
+    };
+};
+
+:app
+{
+    states component, load_image, watch_live, exception_handler;
+    initial_state app_init;
+    transitions
+    {
+        app_init => component, load_image, watch_live, exception_handler;
+        component => exception_handler;
+        load_image => exception_handler;
+        watch_live => exception_handler;
+        exception_handler => component, watch_live, app_init;
     };
 };
 
 :component
 {
-    states processing_blocks, getting_frames, processing_frames, handling_events;
+    states getting_frames;
     initial_state loading_streams;
     end_state closing;
     transitions
     {
-        loading_streams => processing_blocks;
-        processing_blocks => getting_frames;
-        getting_frames => processing_frames;
-        processing_frames => handling_events;
-        handling_events => getting_frames, loading_streams, close;
+        loading_streams => getting_frames;
+        getting_frames => getting_frames, closing;
     };
 };
 
-:load_image
-{
-    initial_state ask_file;
-    end_state launch_window;
-    transitions
-    {
-        ask_file => launch_window;
-    }
-}
 
 :watch_live
 {
-    states process_blocks, get_frames, process_frames, handle_events;
-    initial_state load_streams;
+    states get_frames;
+    initial_state watch_init;
     end_state close;
     transitions
     {
-        load_streams => process_blocks;
-        process_blocks => get_frames;
-        get_frames => process_frames;
-        process_frames => handle_events;
-        handle_events => get_frames, load_streams, close;
+        watch_init => get_frames;
+        get_frames => get_frames, close;
     };
 };

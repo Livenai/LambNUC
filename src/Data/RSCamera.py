@@ -49,7 +49,7 @@ class RSCamera:
             return None
 
     # Stop streaming
-    def stop(self, pipeline):
+    def stop(self):
         self.__pipeline__.stop()
 
     def get_profile_intrinsics(self, profile):

@@ -1,9 +1,13 @@
-from datetime import datetime
+from datetime import datetime, date
 import os
 import csv
 import time
 import cv2
 import numpy as np
+
+
+class FileManager(Exception):
+    pass
 
 
 # system navigation
@@ -15,57 +19,165 @@ def get_items_in_dir(my_path=""):
     return files
 
 
-def save_frames(frames_saved, id_crotal, points, mapped_frame):
+def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
     ts = time.time()
     if id_crotal is not None:
-        mypath = os.path.join(os.getcwd(), "savings", id_crotal)
-        if 2 >= frames_saved > 0 == frames_saved % 2:
-            # date_day = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H:%M')
-            # # date_time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-            if not os.path.exists(mypath):
-                os.makedirs(mypath)
-            dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
-                                  [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))]),
-                              default=0) + 1)
-            mypath = os.path.join(mypath, dirname)
-            if not os.path.exists(mypath):
-                os.makedirs(mypath)
+        # own path in savings, lamb crotal
+        # mypath = os.path.join(os.getcwd(), "savings", id_crotal)
+        # mypath = os.path.join(os.getcwd(), "savings")
+        # if not os.path.exists(mypath):
+        #     os.makedirs(mypath)
+        mypath = os.path.dirname(os.getcwd())
 
-            points.export_to_ply(os.path.join(mypath,
-                                              "{}_pcd_lamb.ply".format(datetime.fromtimestamp(ts))), mapped_frame)
-            frames_saved += 1
+        # path_color = ("savings", "color", date.today())
+        # path_color = ("savings", "depth", date.today())
 
-        elif 60 >= frames_saved > 2 and frames_saved % 2 == 0:
-            dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
-                                  [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))])))
-            mypath = os.path.join(mypath, dirname)
-            points.export_to_ply(os.path.join(mypath,
-                                              "{}_pcd_lamb.ply".format(datetime.fromtimestamp(ts))), mapped_frame)
-            frames_saved += 1
-        elif 0 < frames_saved <= 60:
-            frames_saved += 1
+        def mkdirs(current_path, paths):
+            path = current_path
+            for folder in paths:
+                path = os.path.join(path, str(folder))
+                if not os.path.exists(path):
+                    os.mkdir(path)
+            return path
+
+        if id_crotal is None:
+            path_color = mkdirs(mypath, ("savings", "color", date.today()))
+            path_depth = mkdirs(mypath, ("savings", "depth", date.today()))
         else:
-            frames_saved = 0
-            id_crotal = None
-    elif frames_saved > 60:
-        frames_saved = 0
-    return frames_saved, id_crotal
+            path_color = mkdirs(mypath, ("savings", "color", id_crotal, date.today()))
+            path_depth = mkdirs(mypath, ("savings", "depth", id_crotal, date.today()))
+
+        filename = os.path.join(path_color, "{}_{}_{}.png".format(datetime.fromtimestamp(ts), cam, "color"))
+
+        # path_1 = os.path.join(os.getcwd(), "savings", "{}".format(frame_type),
+        #                       str(date.today()), "{}.png".format(datetime.fromtimestamp(ts)))
+        #
+        # path_2 = os.path.join(os.getcwd(), "savings", "{}".format(frame_type),
+        #                       str(date.today()), "{}.png".format(datetime.fromtimestamp(ts)))
+        #
+        # path_color = os.path.join(mypath, "color")
+        # path_depth = os.path.join(mypath, "depth")
+        # if not os.path.exists(path_color):
+        #     os.makedirs(path_color)
+        # if not os.path.exists(path_depth):
+        #     os.makedirs(path_depth)
+        #
+        # dirname = str(date.today())
+        # # path with date
+        # path_color = os.path.join(path_color, dirname)
+        # path_depth = os.path.join(path_depth, dirname)
+        # if not os.path.exists(path_color):
+        #     os.makedirs(path_color)
+        # if not os.path.exists(path_depth):
+        #     os.makedirs(path_depth)
+        #
+        # # number of collections of the lamb
+        # # dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
+        # #                       [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))]),
+        # #                   default=0) + 1)
+        # # mypath = os.path.join(mypath, dirname)
+        # # if not os.path.exists(mypath):
+        # #     os.makedirs(mypath)
+        #
+        # # Save files
+        # path_color = os.path.join(path_color, "{}_".format(datetime.fromtimestamp(ts)))
+        # path_depth = os.path.join(path_depth, "{}_".format(datetime.fromtimestamp(ts)))
+
+        correct, filename = is_new_file_correct(filename)
+        if correct:
+            cv2.imwrite(filename=filename, img=color_frame)
+        else:
+            raise FileManager("filename incorrect!!")
+        filename = filename.replace("color", "depth")
+        correct, filename = is_new_file_correct(filename)
+        if correct:
+            cv2.imwrite(filename=filename, img=depth_frame)
+        else:
+            raise FileManager("filename incorrect!!")
+    return
 
 
-def take_dataset_frame(color_image, depth_image, frames_saved, id_crotal_aux):
+# TODO
+def read_frames(filename):
+    if os.path.exists(filename) and os.path.isfile(filename):
+
+        color_frame = cv2.imread(filename=filename, mode="RGB")
+        depth_frame = cv2.imread(filename=filename, mode="RGB")
+
+        return color_frame, depth_frame
+    else:
+        print("File Manager ERROR")
+        print("Error trying to read the saved frames")
+        return None
+
+
+def record_frames(color_frame, depth_frame, frames_saved, id_crotal_aux):
     ts = time.time()
     mypath = os.path.join(os.getcwd(), "savings", "RGBDIJ", id_crotal_aux,
                           "RGBDIJ_lamb_{}.mine".format(datetime.fromtimestamp(ts)))
 
     # Save RGBDIJ file
-    RGBDIJ.save_file(color_image, depth_image, mypath)
+    RGBDIJ.save_file(color_frame, depth_frame, mypath)
 
     # Save PNG (RGB) file
     mypath = mypath.replace("RGBDIJ", "PNG").replace(".mine", ".png")
     correct, mypath = is_new_file_correct(mypath)
     if correct:
-        cv2.imwrite(str(mypath.format(datetime.fromtimestamp(ts))), color_image)
+        cv2.imwrite(str(mypath.format(datetime.fromtimestamp(ts))), color_frame)
     return frames_saved, id_crotal_aux
+
+
+# def save_frames(frames_saved, id_crotal, points, mapped_frame):
+#     ts = time.time()
+#     if id_crotal is not None:
+#         mypath = os.path.join(os.getcwd(), "savings", id_crotal)
+#         if 2 >= frames_saved > 0 == frames_saved % 2:
+#             # date_day = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H:%M')
+#             # # date_time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+#             if not os.path.exists(mypath):
+#                 os.makedirs(mypath)
+#             dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
+#                                   [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))]),
+#                               default=0) + 1)
+#             mypath = os.path.join(mypath, dirname)
+#             if not os.path.exists(mypath):
+#                 os.makedirs(mypath)
+#
+#             points.export_to_ply(os.path.join(mypath,
+#                                               "{}_pcd_lamb.ply".format(datetime.fromtimestamp(ts))), mapped_frame)
+#             frames_saved += 1
+#
+#         elif 60 >= frames_saved > 2 and frames_saved % 2 == 0:
+#             dirname = str(max(map(lambda x: int(x) if x.isdigit() else 0,
+#                                   [f for f in os.listdir(mypath) if os.path.isdir(os.path.join(mypath, f))])))
+#             mypath = os.path.join(mypath, dirname)
+#             points.export_to_ply(os.path.join(mypath,
+#                                               "{}_pcd_lamb.ply".format(datetime.fromtimestamp(ts))), mapped_frame)
+#             frames_saved += 1
+#         elif 0 < frames_saved <= 60:
+#             frames_saved += 1
+#         else:
+#             frames_saved = 0
+#             id_crotal = None
+#     elif frames_saved > 60:
+#         frames_saved = 0
+#     return frames_saved, id_crotal
+#
+#
+# def take_dataset_frame(color_image, depth_image, frames_saved, id_crotal_aux):
+#     ts = time.time()
+#     mypath = os.path.join(os.getcwd(), "savings", "RGBDIJ", id_crotal_aux,
+#                           "RGBDIJ_lamb_{}.mine".format(datetime.fromtimestamp(ts)))
+#
+#     # Save RGBDIJ file
+#     RGBDIJ.save_file(color_image, depth_image, mypath)
+#
+#     # Save PNG (RGB) file
+#     mypath = mypath.replace("RGBDIJ", "PNG").replace(".mine", ".png")
+#     correct, mypath = is_new_file_correct(mypath)
+#     if correct:
+#         cv2.imwrite(str(mypath.format(datetime.fromtimestamp(ts))), color_image)
+#     return frames_saved, id_crotal_aux
 
 
 def __is_dir_file_correct__(file):
@@ -148,22 +260,6 @@ def load_csv(file):
                     print("{0}}: Column names are {1}}\n".format(line_count, row))
                     line_count += 1
             print("Processed {} lines.\n".format(line_count))
-
-
-# def load_csv(file):
-#     correct, file = is_file_correct(file)
-#     if correct and os.path.exists(file):
-#         with open(file) as f:
-#             reader = csv.reader(f, delimiter=',')
-#             line_count = 0
-#             for row in reader:
-#                 if line_count == 0:
-#                     print(f'Column names are {", ".join(row)}')
-#                     line_count += 1
-#                 else:
-#                     print(f'{line_count}.:  {", ".join(row)}')
-#                     line_count += 1
-#             print(f'Processed {line_count} lines.')
 
 
 def create_csv():

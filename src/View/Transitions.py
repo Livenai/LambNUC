@@ -1,18 +1,41 @@
-from src.View.GUI import WStarting, WChooseFiles, WLoadImage
+from src.Data import frequency, num_frames
+
+
+def EXIT(self):
+    self.state.close()
+    self.apptothe_end.emit()
 
 
 def StartingW2Component(self):
-    pass
+    if self.state.window is not None:
+        self.state.window.close()
+    self.app_inittocomponent.emit()
 
 
 def StartingW2Watch(self):
-    pass
+    if self.state.window is not None:
+        self.state.window.close()
+    self.app_inittowatch_live.emit()
 
 
 def StartingW2Load(self):
-    self.close()
-    WChooseFiles()
-    pass
+    if self.state.window is not None:
+        self.state.window.close()
+    self.app_inittoload_image.emit()
+
+
+def Frame2FrameLoop(self):
+    self.get_framestoget_frames.emit()
+
+
+def GetFrame2SaveFrame(self):
+    self.state.recording = 1
+    Frame2FrameLoop(self)
+
+
+def GetFrame2TakeFrames(self):
+    self.state.recording = num_frames * frequency
+    Frame2FrameLoop(self)
 
 
 def LoadW2LoadPLY(self):
@@ -33,12 +56,3 @@ def LoadPNGs2Open3D(self):
 
 def LoadPNGs2Load(self):
     pass
-
-
-WStarting.toComponent = StartingW2Component
-WStarting.toWatch = StartingW2Watch
-WStarting.toLoad = StartingW2Load
-WLoadImage.toChoose = LoadW2LoadPNGs
-
-if __name__ == '__main__':
-    window = WStarting()
