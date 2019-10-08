@@ -28,11 +28,12 @@
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
 from src.AppState import AppState
-from src.FileManager import save_frames
+from src.FileManager import save_frames, FileManager
 from src.genericworker import GenericWorker
 from PySide2 import QtCore
 
-from src.rs_camera import isThereALamb
+from src.rs_camera import isThereALamb, RSCamera
+from PySide2.QtCore import QTimer
 
 
 class SpecificWorker(GenericWorker):
@@ -41,12 +42,16 @@ class SpecificWorker(GenericWorker):
 		self.no_cam = 0
 		self.no_memory = 0
 		self.Period = 1000  # 1 second for frame
-		# self.timer.timeout.connect(self.t_get_frames_to_processing_and_filter.emit)
-		# self.timer.start(self.Period)
 		self.Saver_period = 1000 * 60 * 25  # 25 min for a random picture
 		self.saver_timer = QtCore.QTimer(self)
+		self.timer.setInterval(self.Period)
+		self.timer.setSingleShot(True)
+		self.saver_timer.setInterval(self.Saver_period)
+		self.saver_timer.setSingleShot(True)
 
-		self.state = None
+		self.camera = None
+		self.frame = (None, None)
+
 		self.Application.start()
 
 	def __del__(self):
@@ -78,8 +83,6 @@ class SpecificWorker(GenericWorker):
 	def sm_lambscan(self):
 		print("Entered state lambscan")
 
-	# self.t_lambscan_to_end.emit()
-
 	#
 	# sm_end
 	#
@@ -87,7 +90,6 @@ class SpecificWorker(GenericWorker):
 	def sm_end(self):
 		print("Entered state end")
 		self.Application.quit()
-		pass
 
 	#
 	# sm_start_streams
@@ -96,11 +98,12 @@ class SpecificWorker(GenericWorker):
 	def sm_start_streams(self):
 		print("Entered state start_streams")
 		try:
+			self.camera = RSCamera()
 			self.state.start()
+			self.saver_timer.start()
 			self.t_start_streams_to_get_frames.emit()
 		except Exception as e:
-			print("problem starting the streams of the camera")
-			print(e)
+			print("problem starting the streams of the camera\n", e)
 			self.t_start_streams_to_no_camera.emit()
 
 	#
@@ -109,13 +112,11 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_get_frames(self):
 		print("Entered state get_frames")
-		# TODO.
-		self.timer.setInterval(self.Period)
-		self.timer.timeout.connect(self.t_get_frames_to_get_frames.emit)
-		self.timer.singleShot()
+		self.timer.start()
 		try:
 			while self.timer.remainingTime() > 0:
 				self.state.get_frame()
+			self.timer.stop()
 			self.t_get_frames_to_processing_and_filter.emit()
 		except Exception as e:
 			print("Error taking the frame\n", e)
@@ -153,19 +154,10 @@ class SpecificWorker(GenericWorker):
 		print("Entered state processing_and_filter")
 		lamb, path_name = isThereALamb(*self.state.frame)
 		self.state.lamb_path = path_name
-		if lamb:
+		if lamb or self.saver_timer.remainingTime() == 0:
 			self.t_processing_and_filter_to_save.emit()
 		else:
-			# TODO.
-			# self.saver_timer.setInterval(self.Saver_period)
-			# self.saver_timer.timeout.connect(self.t_get_frames_to_get_frames.emit)
-			# self.saver_timer.singleShot()
-			# while self.saver_timer.remainingTime() > 0:
-			# 	self.t_processing_and_filter_to_save.emit()
-			# self.t_get_frames_to_processing_and_filter.emit()
-
-			if self.saver_timer.remainingTime() > 1:
-				self.t_processing_and_filter_to_save.emit()
+			self.t_processing_and_filter_to_get_frames.emit()
 
 	#
 	# sm_save
@@ -175,12 +167,9 @@ class SpecificWorker(GenericWorker):
 		print("Entered state save")
 		try:
 			save_frames(*self.state.frame, self.state.lamb_path)
-		# TODO.
-		# self.saver_timer.setInterval(self.Saver_period)
-		# self.saver_timer.timeout.connect(self.t_get_frames_to_get_frames.emit)
-		# self.saver_timer.singleShot()
-		except Exception as e:
-			print("Problem saving the file", e)
+			self.saver_timer.start()
+		except FileManager as e:
+			print("Problem saving the file\n", e)
 			self.t_save_to_no_memory.emit()
 
 	#
