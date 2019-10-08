@@ -30,7 +30,6 @@ except KeyError:
 
 preStr = "-I/opt/robocomp/interfaces/ -I" + ROBOCOMP + "/interfaces/ --all /opt/robocomp/interfaces/"
 Ice.loadSlice(preStr + "CommonBehavior.ice")
-import RoboCompCommonBehavior
 
 additionalPathStr = ''
 icePaths = ['/opt/robocomp/interfaces']
@@ -204,6 +203,6 @@ class GenericWorker(QtCore.QObject):
     # @param per Period in ms
     @QtCore.Slot(int)
     def setPeriod(self, p):
-        print("Period changed", p)
+        print(("Period changed", p))
         Period = p
         timer.start(Period)

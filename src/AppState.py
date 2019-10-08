@@ -1,5 +1,4 @@
 from src.rs_camera import RSCamera
-from PySide2.QtCore import QTimer
 
 
 class AppState:
