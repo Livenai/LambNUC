@@ -28,6 +28,7 @@
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
 from src.AppState import AppState
+from src.FileManager import save_frames
 from src.genericworker import GenericWorker
 from PySide2 import QtCore
 
@@ -150,7 +151,21 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_processing_and_filter(self):
 		print("Entered state processing_and_filter")
-		reutl = isThereALamb(*self.state.frame)
+		lamb, path_name = isThereALamb(*self.state.frame)
+		self.state.lamb_path = path_name
+		if lamb:
+			self.t_processing_and_filter_to_save.emit()
+		else:
+			# TODO.
+			# self.saver_timer.setInterval(self.Saver_period)
+			# self.saver_timer.timeout.connect(self.t_get_frames_to_get_frames.emit)
+			# self.saver_timer.singleShot()
+			# while self.saver_timer.remainingTime() > 0:
+			# 	self.t_processing_and_filter_to_save.emit()
+			# self.t_get_frames_to_processing_and_filter.emit()
+
+			if self.saver_timer.remainingTime() > 1:
+				self.t_processing_and_filter_to_save.emit()
 
 	#
 	# sm_save
@@ -158,7 +173,15 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_save(self):
 		print("Entered state save")
-		pass
+		try:
+			save_frames(*self.state.frame, self.state.lamb_path)
+		# TODO.
+		# self.saver_timer.setInterval(self.Saver_period)
+		# self.saver_timer.timeout.connect(self.t_get_frames_to_get_frames.emit)
+		# self.saver_timer.singleShot()
+		except Exception as e:
+			print("Problem saving the file", e)
+			self.t_save_to_no_memory.emit()
 
 	#
 	# sm_send_message
@@ -166,7 +189,8 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_send_message(self):
 		print("Entered state send_message")
-		pass
+		print("- Not implemented yet, send an email to the developers.")
+		self.t_send_message_to_exit.emit()
 
 	#
 	# sm_exit
@@ -174,7 +198,7 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_exit(self):
 		print("Entered state exit")
-		pass
+		self.t_lambscan_to_end.emit()
 
 # =================================================================
 # =================================================================

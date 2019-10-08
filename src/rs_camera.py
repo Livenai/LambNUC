@@ -90,13 +90,13 @@ def isThereALamb(color_image, depth_image):
 	# 	return "check"
 	if not (False in depth_image):
 		print("Lamb")
-		return "lamb"
+		return True, "lamb"
 	elif not (True in depth_image):
 		print("There's no lamb")
-		return "no_lamb"
+		return False, "no_lamb"
 	else:
 		print("Error")
-		return "error"
+		return False, "error"
 
 
 def isLamb(image, depth=False):
