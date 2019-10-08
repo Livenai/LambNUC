@@ -1,6 +1,7 @@
 import pyrealsense2 as rs
 import numpy as np
 
+
 class RSCamera:
 	def __init__(self):
 		# Configure depth and color streams
@@ -88,31 +89,32 @@ def isThereALamb(color_image, depth_image):
 	# 	print("Check_this")
 	# 	return "check"
 
-	#TODO: hay que mejorar el algoritmo que dice si hay oveja o no. Demomento el codigo esta preparado
+	# TODO: hay que mejorar el algoritmo que dice si hay oveja o no.
+	# De momento el codigo esta preparado
 	# para mostrar por pantalla si se detecta oveja o no, tanto en la imagen RGB como en la imagen de
 	# profundidad.
 	# Una vez mejorado, se puede modificar el codigo de esta funcion para que retorne los datos debidamente.
-	#-------- COLOR --------
-	if not (False in color_result):
-		print("\t\t\t\t\tcolor: Lamb")
-		#return True, "lamb"
-	elif not (True in color_result):
-		print("\t\t\t\t\tcolor: NO lamb")
-		#return False, "no_lamb"
-	else:
-		print("\t\t\t\t\tcolor: Error")
-		#return False, "error"
+	# #-------- COLOR --------
+	# if not (False in color_result):
+	# 	print("\t\t\t\t\tcolor: Lamb")
+	# 	#return True, "lamb"
+	# elif not (True in color_result):
+	# 	print("\t\t\t\t\tcolor: NO lamb")
+	# 	#return False, "no_lamb"
+	# else:
+	# 	print("\t\t\t\t\tcolor: Error")
+	# 	#return False, "error"
 
-	#-------- DEPTH --------
+	# -------- DEPTH --------
 	if not (False in depth_result):
 		print("\t\t\t\t\tdepth: Lamb")
-		#return True, "lamb"
+		return True, "lamb"
 	elif not (True in depth_result):
 		print("\t\t\t\t\tdepth: NO lamb")
-		#return False, "no_lamb"
+		return False, "no_lamb"
 	else:
 		print("\t\t\t\t\tdepth: Error")
-		#return False, "error"
+		return False, "error"
 	return False, "no_lamb"
 
 
