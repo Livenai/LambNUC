@@ -1,5 +1,6 @@
 import os
 import time
+from PySide2.QtCore import QTime
 from datetime import datetime, date
 import cv2
 

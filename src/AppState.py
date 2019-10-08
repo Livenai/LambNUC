@@ -5,8 +5,11 @@ from PySide2.QtCore import QTimer
 class AppState:
     def __init__(self):
         self.camera = RSCamera()
-        self.timer_fps = QTimer()  # Llock / Unlock GET_FRAME State
-        self.timer_filter = QTimer()  # Take images without a lamb
+        # self.timer_fps = QTimer()  # Llock / Unlock GET_FRAME State
+        # self.timer_filter = QTimer()  # Take images without a lamb
         self.frame = (None, None)
+        self.start = self.camera.start
 
-
+    def get_frame(self):
+        self.frame = self.camera.get_frame()
+        return self.frame
