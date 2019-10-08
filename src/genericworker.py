@@ -23,236 +23,187 @@ from PySide2 import QtWidgets, QtCore
 
 ROBOCOMP = ''
 try:
-	ROBOCOMP = os.environ['ROBOCOMP']
+    ROBOCOMP = os.environ['ROBOCOMP']
 except KeyError:
-	print '$ROBOCOMP environment variable not set, using the default value /opt/robocomp'
-	ROBOCOMP = '/opt/robocomp'
+    print('$ROBOCOMP environment variable not set, using the default value /opt/robocomp')
+    ROBOCOMP = '/opt/robocomp'
 
-preStr = "-I/opt/robocomp/interfaces/ -I"+ROBOCOMP+"/interfaces/ --all /opt/robocomp/interfaces/"
-Ice.loadSlice(preStr+"CommonBehavior.ice")
+preStr = "-I/opt/robocomp/interfaces/ -I" + ROBOCOMP + "/interfaces/ --all /opt/robocomp/interfaces/"
+Ice.loadSlice(preStr + "CommonBehavior.ice")
 import RoboCompCommonBehavior
 
 additionalPathStr = ''
-icePaths = [ '/opt/robocomp/interfaces' ]
+icePaths = ['/opt/robocomp/interfaces']
 try:
-	SLICE_PATH = os.environ['SLICE_PATH'].split(':')
-	for p in SLICE_PATH:
-		icePaths.append(p)
-		additionalPathStr += ' -I' + p + ' '
-	icePaths.append('/opt/robocomp/interfaces')
+    SLICE_PATH = os.environ['SLICE_PATH'].split(':')
+    for p in SLICE_PATH:
+        icePaths.append(p)
+        additionalPathStr += ' -I' + p + ' '
+    icePaths.append('/opt/robocomp/interfaces')
 except:
-	print 'SLICE_PATH environment variable was not exported. Using only the default paths'
-	pass
-
-
-
+    print('SLICE_PATH environment variable was not exported. Using only the default paths')
+    pass
 
 
 class GenericWorker(QtCore.QObject):
+    kill = QtCore.Signal()
+    # Signals for State Machine
+    t_init_to_lambscan = QtCore.Signal()
+    t_lambscan_to_end = QtCore.Signal()
+    t_start_streams_to_get_frames = QtCore.Signal()
+    t_start_streams_to_no_camera = QtCore.Signal()
+    t_start_streams_to_send_message = QtCore.Signal()
+    t_get_frames_to_processing_and_filter = QtCore.Signal()
+    t_get_frames_to_no_camera = QtCore.Signal()
+    t_get_frames_to_get_frames = QtCore.Signal()
+    t_get_frames_to_send_message = QtCore.Signal()
+    t_processing_and_filter_to_get_frames = QtCore.Signal()
+    t_processing_and_filter_to_save = QtCore.Signal()
+    t_processing_and_filter_to_send_message = QtCore.Signal()
+    t_save_to_get_frames = QtCore.Signal()
+    t_save_to_no_memory = QtCore.Signal()
+    t_save_to_send_message = QtCore.Signal()
+    t_no_camera_to_start_streams = QtCore.Signal()
+    t_no_camera_to_send_message = QtCore.Signal()
+    t_no_memory_to_save = QtCore.Signal()
+    t_no_memory_to_send_message = QtCore.Signal()
+    t_send_message_to_exit = QtCore.Signal()
 
-	kill = QtCore.Signal()
-#Signals for State Machine
-	apptoapp = QtCore.Signal()
-	apptothe_end = QtCore.Signal()
-	app_inittocomponent = QtCore.Signal()
-	app_inittoload_image = QtCore.Signal()
-	app_inittowatch_live = QtCore.Signal()
-	app_inittoexception_handler = QtCore.Signal()
-	componenttoexception_handler = QtCore.Signal()
-	load_imagetoexception_handler = QtCore.Signal()
-	watch_livetoexception_handler = QtCore.Signal()
-	exception_handlertocomponent = QtCore.Signal()
-	exception_handlertowatch_live = QtCore.Signal()
-	exception_handlertoapp_init = QtCore.Signal()
-	loading_streamstogetting_frames = QtCore.Signal()
-	getting_framestogetting_frames = QtCore.Signal()
-	getting_framestoclosing = QtCore.Signal()
-	watch_inittoget_frames = QtCore.Signal()
-	get_framestoget_frames = QtCore.Signal()
-	get_framestoclose = QtCore.Signal()
+    # -------------------------
 
-#-------------------------
+    def __init__(self, mprx):
+        super(GenericWorker, self).__init__()
 
-	def __init__(self, mprx):
-		super(GenericWorker, self).__init__()
+        self.mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
+        self.Period = 30
+        self.timer = QtCore.QTimer(self)
 
+        # State Machine
+        self.Application = QtCore.QStateMachine()
+        self.lambscan_state = QtCore.QState(self.Application)
+        self.init_state = QtCore.QState(self.Application)
 
+        self.end_state = QtCore.QFinalState(self.Application)
 
-		
-		self.mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
-		self.Period = 30
-		self.timer = QtCore.QTimer(self)
+        self.get_frames_state = QtCore.QState(self.lambscan_state)
+        self.processing_and_filter_state = QtCore.QState(self.lambscan_state)
+        self.save_state = QtCore.QState(self.lambscan_state)
+        self.no_camera_state = QtCore.QState(self.lambscan_state)
+        self.no_memory_state = QtCore.QState(self.lambscan_state)
+        self.send_message_state = QtCore.QState(self.lambscan_state)
+        self.start_streams_state = QtCore.QState(self.lambscan_state)
 
-#State Machine
-		self.Application= QtCore.QStateMachine()
-		self.app_state = QtCore.QState(self.Application)
+        self.exit_state = QtCore.QFinalState(self.lambscan_state)
 
-		self.the_end_state = QtCore.QFinalState(self.Application)
+        # ------------------
+        # Initialization State machine
+        self.init_state.addTransition(self.t_init_to_lambscan, self.lambscan_state)
+        self.lambscan_state.addTransition(self.t_lambscan_to_end, self.end_state)
+        self.start_streams_state.addTransition(self.t_start_streams_to_get_frames, self.get_frames_state)
+        self.start_streams_state.addTransition(self.t_start_streams_to_no_camera, self.no_camera_state)
+        self.start_streams_state.addTransition(self.t_start_streams_to_send_message, self.send_message_state)
+        self.get_frames_state.addTransition(self.t_get_frames_to_processing_and_filter,
+                                            self.processing_and_filter_state)
+        self.get_frames_state.addTransition(self.t_get_frames_to_no_camera, self.no_camera_state)
+        self.get_frames_state.addTransition(self.t_get_frames_to_get_frames, self.get_frames_state)
+        self.get_frames_state.addTransition(self.t_get_frames_to_send_message, self.send_message_state)
+        self.processing_and_filter_state.addTransition(self.t_processing_and_filter_to_get_frames,
+                                                       self.get_frames_state)
+        self.processing_and_filter_state.addTransition(self.t_processing_and_filter_to_save, self.save_state)
+        self.processing_and_filter_state.addTransition(self.t_processing_and_filter_to_send_message,
+                                                       self.send_message_state)
+        self.save_state.addTransition(self.t_save_to_get_frames, self.get_frames_state)
+        self.save_state.addTransition(self.t_save_to_no_memory, self.no_memory_state)
+        self.save_state.addTransition(self.t_save_to_send_message, self.send_message_state)
+        self.no_camera_state.addTransition(self.t_no_camera_to_start_streams, self.start_streams_state)
+        self.no_camera_state.addTransition(self.t_no_camera_to_send_message, self.send_message_state)
+        self.no_memory_state.addTransition(self.t_no_memory_to_save, self.save_state)
+        self.no_memory_state.addTransition(self.t_no_memory_to_send_message, self.send_message_state)
+        self.send_message_state.addTransition(self.t_send_message_to_exit, self.exit_state)
 
+        self.lambscan_state.entered.connect(self.sm_lambscan)
+        self.init_state.entered.connect(self.sm_init)
+        self.end_state.entered.connect(self.sm_end)
+        self.start_streams_state.entered.connect(self.sm_start_streams)
+        self.exit_state.entered.connect(self.sm_exit)
+        self.get_frames_state.entered.connect(self.sm_get_frames)
+        self.processing_and_filter_state.entered.connect(self.sm_processing_and_filter)
+        self.save_state.entered.connect(self.sm_save)
+        self.no_camera_state.entered.connect(self.sm_no_camera)
+        self.no_memory_state.entered.connect(self.sm_no_memory)
+        self.send_message_state.entered.connect(self.sm_send_message)
 
+        self.Application.setInitialState(self.init_state)
+        self.lambscan_state.setInitialState(self.start_streams_state)
 
-		self.component_state = QtCore.QState(self.app_state)
-		self.load_image_state = QtCore.QState(self.app_state)
-		self.watch_live_state = QtCore.QState(self.app_state)
-		self.exception_handler_state = QtCore.QState(self.app_state)
-		self.app_init_state = QtCore.QState(self.app_state)
+    # ------------------
 
+    # Slots funtion State Machine
+    @QtCore.Slot()
+    def sm_lambscan(self):
+        print("Error: lack sm_lambscan in Specificworker")
+        sys.exit(-1)
 
+    @QtCore.Slot()
+    def sm_init(self):
+        print("Error: lack sm_init in Specificworker")
+        sys.exit(-1)
 
+    @QtCore.Slot()
+    def sm_end(self):
+        print("Error: lack sm_end in Specificworker")
+        sys.exit(-1)
 
-		self.getting_frames_state = QtCore.QState(self.component_state)
-		self.loading_streams_state = QtCore.QState(self.component_state)
+    @QtCore.Slot()
+    def sm_get_frames(self):
+        print("Error: lack sm_get_frames in Specificworker")
+        sys.exit(-1)
 
-		self.closing_state = QtCore.QFinalState(self.component_state)
+    @QtCore.Slot()
+    def sm_processing_and_filter(self):
+        print("Error: lack sm_processing_and_filter in Specificworker")
+        sys.exit(-1)
 
+    @QtCore.Slot()
+    def sm_save(self):
+        print("Error: lack sm_save in Specificworker")
+        sys.exit(-1)
 
+    @QtCore.Slot()
+    def sm_no_camera(self):
+        print("Error: lack sm_no_camera in Specificworker")
+        sys.exit(-1)
 
-		self.get_frames_state = QtCore.QState(self.watch_live_state)
-		self.watch_init_state = QtCore.QState(self.watch_live_state)
+    @QtCore.Slot()
+    def sm_no_memory(self):
+        print("Error: lack sm_no_memory in Specificworker")
+        sys.exit(-1)
 
-		self.close_state = QtCore.QFinalState(self.watch_live_state)
+    @QtCore.Slot()
+    def sm_send_message(self):
+        print("Error: lack sm_send_message in Specificworker")
+        sys.exit(-1)
 
+    @QtCore.Slot()
+    def sm_start_streams(self):
+        print("Error: lack sm_start_streams in Specificworker")
+        sys.exit(-1)
 
-#------------------
-#Initialization State machine
-		self.app_state.addTransition(self.apptoapp, self.app_state)
-		self.app_state.addTransition(self.apptothe_end, self.the_end_state)
-		self.app_init_state.addTransition(self.app_inittocomponent, self.component_state)
-		self.app_init_state.addTransition(self.app_inittoload_image, self.load_image_state)
-		self.app_init_state.addTransition(self.app_inittowatch_live, self.watch_live_state)
-		self.app_init_state.addTransition(self.app_inittoexception_handler, self.exception_handler_state)
-		self.component_state.addTransition(self.componenttoexception_handler, self.exception_handler_state)
-		self.load_image_state.addTransition(self.load_imagetoexception_handler, self.exception_handler_state)
-		self.watch_live_state.addTransition(self.watch_livetoexception_handler, self.exception_handler_state)
-		self.exception_handler_state.addTransition(self.exception_handlertocomponent, self.component_state)
-		self.exception_handler_state.addTransition(self.exception_handlertowatch_live, self.watch_live_state)
-		self.exception_handler_state.addTransition(self.exception_handlertoapp_init, self.app_init_state)
-		self.loading_streams_state.addTransition(self.loading_streamstogetting_frames, self.getting_frames_state)
-		self.getting_frames_state.addTransition(self.getting_framestogetting_frames, self.getting_frames_state)
-		self.getting_frames_state.addTransition(self.getting_framestoclosing, self.closing_state)
-		self.watch_init_state.addTransition(self.watch_inittoget_frames, self.get_frames_state)
-		self.get_frames_state.addTransition(self.get_framestoget_frames, self.get_frames_state)
-		self.get_frames_state.addTransition(self.get_framestoclose, self.close_state)
+    @QtCore.Slot()
+    def sm_exit(self):
+        print("Error: lack sm_exit in Specificworker")
+        sys.exit(-1)
 
+    # -------------------------
+    @QtCore.Slot()
+    def killYourSelf(self):
+        rDebug("Killing myself")
+        self.kill.emit()
 
-		self.app_state.entered.connect(self.sm_app)
-		self.the_end_state.entered.connect(self.sm_the_end)
-		self.app_init_state.entered.connect(self.sm_app_init)
-		self.component_state.entered.connect(self.sm_component)
-		self.load_image_state.entered.connect(self.sm_load_image)
-		self.watch_live_state.entered.connect(self.sm_watch_live)
-		self.exception_handler_state.entered.connect(self.sm_exception_handler)
-		self.loading_streams_state.entered.connect(self.sm_loading_streams)
-		self.closing_state.entered.connect(self.sm_closing)
-		self.getting_frames_state.entered.connect(self.sm_getting_frames)
-		self.watch_init_state.entered.connect(self.sm_watch_init)
-		self.close_state.entered.connect(self.sm_close)
-		self.get_frames_state.entered.connect(self.sm_get_frames)
-
-		self.Application.setInitialState(self.app_state)
-		self.app_state.setInitialState(self.app_init_state)
-		self.component_state.setInitialState(self.loading_streams_state)
-		self.watch_live_state.setInitialState(self.watch_init_state)
-
-#------------------
-
-#Slots funtion State Machine
-	@QtCore.Slot()
-	def sm_n(self):
-		print "Error: lack sm_n in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_o(self):
-		print "Error: lack sm_o in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_n(self):
-		print "Error: lack sm_n in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_e(self):
-		print "Error: lack sm_e in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_app(self):
-		print "Error: lack sm_app in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_the_end(self):
-		print "Error: lack sm_the_end in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_component(self):
-		print "Error: lack sm_component in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_load_image(self):
-		print "Error: lack sm_load_image in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_watch_live(self):
-		print "Error: lack sm_watch_live in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_exception_handler(self):
-		print "Error: lack sm_exception_handler in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_app_init(self):
-		print "Error: lack sm_app_init in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_getting_frames(self):
-		print "Error: lack sm_getting_frames in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_loading_streams(self):
-		print "Error: lack sm_loading_streams in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_closing(self):
-		print "Error: lack sm_closing in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_get_frames(self):
-		print "Error: lack sm_get_frames in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_watch_init(self):
-		print "Error: lack sm_watch_init in Specificworker"
-		sys.exit(-1)
-
-	@QtCore.Slot()
-	def sm_close(self):
-		print "Error: lack sm_close in Specificworker"
-		sys.exit(-1)
-
-
-#-------------------------
-	@QtCore.Slot()
-	def killYourSelf(self):
-		rDebug("Killing myself")
-		self.kill.emit()
-
-	# \brief Change compute period
-	# @param per Period in ms
-	@QtCore.Slot(int)
-	def setPeriod(self, p):
-		print "Period changed", p
-		Period = p
-		timer.start(Period)
+    # \brief Change compute period
+    # @param per Period in ms
+    @QtCore.Slot(int)
+    def setPeriod(self, p):
+        print("Period changed", p)
+        Period = p
+        timer.start(Period)

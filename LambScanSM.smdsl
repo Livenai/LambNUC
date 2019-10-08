@@ -1,48 +1,29 @@
 Application
 {
-    initial_state app;
-    end_state the_end;
+    initial_state init;
+    states lambscan;
+    end_state end;
     transitions
     {
-        app => app, the_end;
+        init => lambscan;
+        lambscan => end;
     };
 };
 
-:app
+:lambscan
 {
-    states component, load_image, watch_live, exception_handler;
-    initial_state app_init;
+    initial_state start_streams;
+    states get_frames, processing_and_filter, save, no_camera, no_memory, send_message;
+    end_state exit;
     transitions
     {
-        app_init => component, load_image, watch_live, exception_handler;
-        component => exception_handler;
-        load_image => exception_handler;
-        watch_live => exception_handler;
-        exception_handler => component, watch_live, app_init;
+        start_streams => get_frames, no_camera, send_message;
+        get_frames => processing_and_filter, no_camera, get_frames, send_message;
+        processing_and_filter => get_frames, save, send_message;
+        save => get_frames, no_memory, send_message;
+        no_camera => start_streams, send_message;
+        no_memory => save, send_message;
+        send_message => exit;
     };
 };
 
-:component
-{
-    states getting_frames;
-    initial_state loading_streams;
-    end_state closing;
-    transitions
-    {
-        loading_streams => getting_frames;
-        getting_frames => getting_frames, closing;
-    };
-};
-
-
-:watch_live
-{
-    states get_frames;
-    initial_state watch_init;
-    end_state close;
-    transitions
-    {
-        watch_init => get_frames;
-        get_frames => get_frames, close;
-    };
-};
