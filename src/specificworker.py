@@ -21,6 +21,7 @@
 
 from genericworker import *
 
+
 # If RoboComp was compiled with Python bindings you can use InnerModel in Python
 # sys.path.append('/opt/robocomp/lib')
 # import librobocomp_qmat
@@ -28,123 +29,120 @@ from genericworker import *
 # import librobocomp_innermodel
 
 class SpecificWorker(GenericWorker):
-	def __init__(self, proxy_map):
-		super(SpecificWorker, self).__init__(proxy_map)
-		self.Period = 2000
-		self.timer.start(self.Period)
+    def __init__(self, proxy_map):
+        super(SpecificWorker, self).__init__(proxy_map)
+        self.Period = 2000
+        self.timer.start(self.Period)
 
-		self.Application.start()
+        self.Application.start()
 
-	def __del__(self):
-		print('SpecificWorker destructor')
+    def __del__(self):
+        print('SpecificWorker destructor')
 
-	def setParams(self, params):
-		#try:
-		#	self.innermodel = InnerModel(params["InnerModelPath"])
-		#except:
-		#	traceback.print_exc()
-		#	print "Error reading config params"
-		return True
+    def setParams(self, params):
+        # try:
+        #	self.innermodel = InnerModel(params["InnerModelPath"])
+        # except:
+        #	traceback.print_exc()
+        #	print "Error reading config params"
+        return True
 
+    # =============== Slots methods for State Machine ===================
+    # ===================================================================
+    #
+    # sm_init
+    #
+    @QtCore.Slot()
+    def sm_init(self):
+        print("Entered state init")
+        self.t_init_to_lambscan.emit()
+        pass
 
-# =============== Slots methods for State Machine ===================
-# ===================================================================
-	#
-	# sm_init
-	#
-	@QtCore.Slot()
-	def sm_init(self):
-		print("Entered state init")
-		self.t_init_to_lambscan.emit()
-		pass
+    #
+    # sm_lambscan
+    #
+    @QtCore.Slot()
+    def sm_lambscan(self):
+        print("Entered state lambscan")
+        self.t_lambscan_to_end.emit()
+        pass
 
-	#
-	# sm_lambscan
-	#
-	@QtCore.Slot()
-	def sm_lambscan(self):
-		print("Entered state lambscan")
-		self.t_lambscan_to_end.emit()
-		pass
+    #
+    # sm_end
+    #
+    @QtCore.Slot()
+    def sm_end(self):
+        print("Entered state end")
+        import time
+        time.sleep(2)
+        # TODO: ¿como salir? ¡¡asi!!
+        from PySide2.QtWidgets import QApplication
+        QApplication.quit()
+        pass
 
-	#
-	# sm_end
-	#
-	@QtCore.Slot()
-	def sm_end(self):
-		print("Entered state end")
-		import time
-		time.sleep(2)
-		#TODO: ¿como salir? ¡¡asi!!
-		from PySide2.QtWidgets import QApplication
-		QApplication.quit()
-		pass
+    #
+    # sm_start_streams
+    #
+    @QtCore.Slot()
+    def sm_start_streams(self):
+        print("Entered state start_streams")
+        pass
 
-	#
-	# sm_start_streams
-	#
-	@QtCore.Slot()
-	def sm_start_streams(self):
-		print("Entered state start_streams")
-		pass
+    #
+    # sm_get_frames
+    #
+    @QtCore.Slot()
+    def sm_get_frames(self):
+        print("Entered state get_frames")
+        pass
 
-	#
-	# sm_get_frames
-	#
-	@QtCore.Slot()
-	def sm_get_frames(self):
-		print("Entered state get_frames")
-		pass
+    #
+    # sm_no_camera
+    #
+    @QtCore.Slot()
+    def sm_no_camera(self):
+        print("Entered state no_camera")
+        pass
 
-	#
-	# sm_no_camera
-	#
-	@QtCore.Slot()
-	def sm_no_camera(self):
-		print("Entered state no_camera")
-		pass
+    #
+    # sm_no_memory
+    #
+    @QtCore.Slot()
+    def sm_no_memory(self):
+        print("Entered state no_memory")
+        pass
 
-	#
-	# sm_no_memory
-	#
-	@QtCore.Slot()
-	def sm_no_memory(self):
-		print("Entered state no_memory")
-		pass
+    #
+    # sm_processing_and_filter
+    #
+    @QtCore.Slot()
+    def sm_processing_and_filter(self):
+        print("Entered state processing_and_filter")
+        pass
 
-	#
-	# sm_processing_and_filter
-	#
-	@QtCore.Slot()
-	def sm_processing_and_filter(self):
-		print("Entered state processing_and_filter")
-		pass
+    #
+    # sm_save
+    #
+    @QtCore.Slot()
+    def sm_save(self):
+        print("Entered state save")
+        pass
 
-	#
-	# sm_save
-	#
-	@QtCore.Slot()
-	def sm_save(self):
-		print("Entered state save")
-		pass
+    #
+    # sm_send_message
+    #
+    @QtCore.Slot()
+    def sm_send_message(self):
+        print("Entered state send_message")
+        pass
 
-	#
-	# sm_send_message
-	#
-	@QtCore.Slot()
-	def sm_send_message(self):
-		print("Entered state send_message")
-		pass
-
-	#
-	# sm_exit
-	#
-	@QtCore.Slot()
-	def sm_exit(self):
-		print("Entered state exit")
-		pass
-
+    #
+    # sm_exit
+    #
+    @QtCore.Slot()
+    def sm_exit(self):
+        print("Entered state exit")
+        pass
 
 # =================================================================
 # =================================================================
-
