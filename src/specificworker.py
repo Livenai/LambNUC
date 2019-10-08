@@ -72,7 +72,7 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_init(self):
 		print("Entered state init")
-		#self.camera = AppState()
+		# self.camera = AppState()
 		self.t_init_to_lambscan.emit()
 
 	#
@@ -90,6 +90,7 @@ class SpecificWorker(GenericWorker):
 		print("Entered state end")
 		from PySide2.QtWidgets import QApplication
 		QApplication.quit()
+
 	#
 	# sm_start_streams
 	#
@@ -118,7 +119,7 @@ class SpecificWorker(GenericWorker):
 			self.timer.stop()
 			self.t_get_frames_to_processing_and_filter.emit()
 		except Exception as e:
-			#TODO: comprobar si esto funciona. Cuando desconectas la camara, salta una excepcion en vez de entrar aqui.
+			# TODO: comprobar si esto funciona. Cuando desconectas la camara, salta una excepcion en vez de entrar aqui.
 			print(("Error taking the frame\n", e))
 			self.t_get_frames_to_no_camera.emit()
 
@@ -153,12 +154,12 @@ class SpecificWorker(GenericWorker):
 	def sm_processing_and_filter(self):
 		print("Entered state processing_and_filter")
 		lamb, path_name = isThereALamb(*self.frame)
-		self.camera.lamb_path = path_name
+		self.lamb_path = path_name
 		if lamb or self.saver_timer.remainingTime() == 0:
 			#TODO: esta linea debe ser descomentada para el transcurso
 			# normal del programa. Ahora esta comentada para que se quede encerrado entre este estado y get_frames.
 			# La segunda linea debe ser borrada para el transcurso normal del programa.
-			#self.t_processing_and_filter_to_save.emit()
+			# self.t_processing_and_filter_to_save.emit()
 			self.t_processing_and_filter_to_get_frames.emit()
 		else:
 			self.t_processing_and_filter_to_get_frames.emit()
@@ -170,7 +171,7 @@ class SpecificWorker(GenericWorker):
 	def sm_save(self):
 		print("Entered state save")
 		try:
-			save_frames(*self.camera.frame, self.camera.lamb_path)
+			save_frames(*self.frame, self.lamb_path)
 			self.saver_timer.start()
 		except FileManager as e:
 			print(("Problem saving the file\n", e))
