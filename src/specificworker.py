@@ -159,11 +159,7 @@ class SpecificWorker(GenericWorker):
 		lamb, path_name = isThereALamb(*self.frame)
 		self.lamb_path = path_name
 		if lamb or self.saver_timer.remainingTime() == 0:
-			# TODO: esta linea debe ser descomentada para el transcurso
-			# normal del programa. Ahora esta comentada para que se quede encerrado entre este estado y get_frames.
-			# La segunda linea debe ser borrada para el transcurso normal del programa.
-			# self.t_processing_and_filter_to_save.emit()
-			self.t_processing_and_filter_to_get_frames.emit()
+			self.t_processing_and_filter_to_save.emit()
 		else:
 			self.t_processing_and_filter_to_get_frames.emit()
 
