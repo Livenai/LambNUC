@@ -1,9 +1,21 @@
+import cv2
 import pyrealsense2 as rs
 import numpy as np
 
 __HEIGHT__ = 480
 __WIDTH__ = 640
 
+#zona de interes
+Yi = 185
+Xi = 14
+Hi = 211
+Wi = 544
+
+#porcentaje de reduccion del mapa de voxels
+voxel_scale_percent = 10
+
+#umbral derecuento de voxels
+voxel_threshold = 900  # 932 aprox.
 
 class RSCamera:
 	def __init__(self):
@@ -75,7 +87,7 @@ def isThereALamb(color_image, depth_image):
 		it might be there's a part of a lamb in the image (still False).
 	"""
 	# color_result = isLamb(color_image, depth=False)  	# Not used right now. It'll be used.
-	depth_result = __isLamb__(depth_image, depth=True)
+	depth_result = __isLamb2__(depth_image, depth=True)
 	# if not (False in color_result or False in depth_result):
 	# 	print("There's a Lamb")
 	# 	return "lamb"
@@ -89,13 +101,9 @@ def isThereALamb(color_image, depth_image):
 	# 	print("Check_this")
 	# 	return "check"
 
-	# TODO: hay que mejorar el algoritmo que dice si hay oveja o no.
-	# De momento el codigo esta preparado
-	# para mostrar por pantalla si se detecta oveja o no, tanto en la imagen RGB como en la imagen de
-	# profundidad.
-	# Una vez mejorado, se puede modificar el codigo de esta funcion para que retorne los datos debidamente.
 
 	# -------- DEPTH --------
+	'''
 	if not (False in depth_result):
 		print("\t\t\t\t\tdepth image: There's a Lamb")
 		return True, "lamb"
@@ -106,6 +114,32 @@ def isThereALamb(color_image, depth_image):
 		print("\t\t\t\t\tdepth image: There's something (error)")
 		print("\t\t\tDepth Image detected a lamb in: ", depth_result)
 		return False, "error"
+	'''
+
+	# TODO: hay que mejorar el algoritmo que dice si hay oveja o no.
+	#  depth_result guarda ahora el numero de voxels que han superado el umbral.
+
+	# establecemos los umbrales
+	bad_lamb_threshold  = 180
+	lamb_threshold      = 320
+	over_lamb_threshold = 800
+
+	print("\tNum Voxel:\t " + str(depth_result))
+
+	# comprobamos el numero para determinar que se ha detectado
+	if depth_result >= 0 and depth_result < bad_lamb_threshold:
+		print("\tno lamb")
+	elif depth_result < lamb_threshold:
+		print("\tbad lamb")
+	elif depth_result < over_lamb_threshold:
+		print("\tlamb")
+	elif depth_result >= over_lamb_threshold:
+		print("\tover lamb")
+	else:
+		print("[!] Impossible print. Something is wrong in isThereALamb()")
+
+	#TODO
+	return True, "lamb"
 
 
 def __isLamb__(image, depth=False):
@@ -128,3 +162,31 @@ def __isLamb__(image, depth=False):
 				  average_center > __edged_RGB__, average_right > __edged_RGB__)
 
 	return result
+
+def __isLamb2__(image, depth=False):
+	"""
+		funcion que recorta la imagen en la zona de interes (donde se debe de encontrar la lamb)
+		y reduce la imagen a un mapa de voxels. Estos voxels son la media aritmetica de
+		los pixeles que abarca.
+		La funcion devuelve el numero de voxels que superan elumbral de deteccion de lamb.
+	"""
+	result = -1
+
+	#recortamos en la zona de interes
+	image_crop = image[Yi:Yi+Hi, Xi:Xi+Wi]
+
+	#reducimos al mapa de voxels
+	width = int(image_crop.shape[1] * voxel_scale_percent / 100)
+	height = int(image_crop.shape[0] * voxel_scale_percent / 100)
+	dim = (width, height)
+	resized_image = cv2.resize(image_crop, dim, interpolation=cv2.INTER_LANCZOS4)
+
+	#cv2.imwrite(filename='/home/carlos/robocomp/components/LambSM/savings/voxel.png', img=resized_image)
+
+	#contamos los voxels que superan el umbral
+	for fila in resized_image:
+		for voxel in fila:
+			if voxel <= voxel_threshold:
+				result += 1
+
+	return result +1
