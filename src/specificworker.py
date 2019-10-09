@@ -47,6 +47,7 @@ class SpecificWorker(GenericWorker):
 		self.saver_timer.setSingleShot(True)
 
 		self.camera = None
+		self.lamb_path = ""
 		self.frame = (None, None)
 
 		self.Application.start()
@@ -137,10 +138,7 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_no_camera(self):
 		print("Entered state no_camera")
-		try:
-			self.camera.stop()
-		except:
-			pass
+		self.camera.__del__()
 		self.camera = None
 		self.no_cam += 1
 		if self.no_cam > 12:
@@ -166,9 +164,9 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_processing_and_filter(self):
 		print("Entered state processing_and_filter")
-		lamb, path_name = isThereALamb(*self.frame)
-		self.lamb_path = path_name
-		if lamb or self.saver_timer.remainingTime() == 0:
+		self.no_cam = 0
+		isLamb, self.lamb_path = isThereALamb(*self.frame)
+		if isLamb or self.saver_timer.remainingTime() == 0:
 			self.t_processing_and_filter_to_save.emit()
 		else:
 			self.t_processing_and_filter_to_get_frames.emit()
@@ -182,6 +180,7 @@ class SpecificWorker(GenericWorker):
 		try:
 			save_frames(*self.frame, self.lamb_path)
 			self.saver_timer.start()
+			self.t_save_to_get_frames.emit()
 		except FileManager as e:
 			print(("Problem saving the file\n", e))
 			self.t_save_to_no_memory.emit()
