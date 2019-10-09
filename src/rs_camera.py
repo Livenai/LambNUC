@@ -14,39 +14,18 @@ class RSCamera:
 		self.__config__.enable_stream(rs.stream.color, __WIDTH__, __HEIGHT__, rs.format.bgr8, 30)
 		# self.__config__.enable_stream(rs.stream.infrared)
 
-		# self.__profile__ = None
-		# self.__depth_profile__ = None
-		# self.__depth_intrinsics__ = None
-		# self.__decimate__ = None
-		# self.__colorizer__ = None
-
 	def __del__(self):
 		try:
 			self.stop()
 		except:
 			pass
-
 		self.__pipeline__ = None
 		self.__config__ = None
-		# self.__profile__ = None
-		# self.__depth_profile__ = None
-		# self.__depth_intrinsics__ = None
-		# self.__decimate__ = None
-		# self.__colorizer__ = None
 
 	def start(self):
 		try:
 			# Start streaming
 			self.__pipeline__.start(self.__config__)
-			# self.__decimate__ = rs.decimation_filter()
-			# self.__colorizer__ = rs.colorizer()
-			#
-			# # Get stream profile and camera intrinsics
-			# self.__profile__ = self.__pipeline__.get_active_profile()
-			# self.__depth_profile__ = rs.video_stream_profile(self.__profile__.get_stream(rs.stream.depth))
-			#
-			# self.__depth_intrinsics__ = self.__depth_profile__.get_intrinsics()
-			# self.__decimate__.set_option(rs.option.filter_magnitude, 2 ** self.__decimate__)
 			return True
 		except Exception as e:
 			print(e)
@@ -64,7 +43,6 @@ class RSCamera:
 		color_image = np.asanyarray(color_frame.get_data())
 
 		return color_image, depth_image
-
 
 	# Stop streaming
 	def stop(self):
@@ -135,9 +113,8 @@ def __isLamb__(image, depth=False):
 	:param depth:
 	:return:
 	"""
-	# conf = (image, __w_crop, __h_crop, depth)
-	average_left = np.mean(image[263:308, 113:208])
-	average_center = np.mean(image[263:308, 273:368])
+	average_left = np.mean(image[263:308, 113:208])  # crop left
+	average_center = np.mean(image[263:308, 273:368])  # crop center
 	average_right = np.mean(image[263:308, 413:508])  # crop right
 
 	if depth:
@@ -149,51 +126,3 @@ def __isLamb__(image, depth=False):
 				  average_center > __edged_RGB__, average_right > __edged_RGB__)
 
 	return result
-
-# def __crop__(img, cropx, cropy, depth):
-# 	global _startx, _starty
-# 	if depth:
-# 		y, x = img.shape
-# 	else:
-# 		y, x, _ = img.shape
-# 	_startx = x // 2 - (cropx // 2)
-# 	_starty = y // 2 - (cropy // 2) + 45
-# 	return _startx, _starty
-#
-#
-# def __crop_center__(img, cropx, cropy, depth=False):
-# 	# return img[263:308, 273:368]
-# 	if _startx is None or _starty is None:
-# 		startx, starty = __crop__(img, cropx, cropy, depth)
-# 	return img[_starty:_starty + cropy, _startx:_startx + cropx]
-#
-#
-# def __crop_left__(img, cropx, cropy, depth=False):
-# 	# return img[263:308, 113:208]
-# 	if _startx is None or _starty is None:
-# 		startx, starty = __crop__(img, cropx, cropy, depth)
-# 	else:
-# 		startx, starty = _startx, _starty
-# 	startx -= 160
-# 	return img[starty:starty + cropy, startx:startx + cropx]
-#
-#
-# def __crop_right__(img, cropx, cropy, depth=False):
-# 	# return img[263:308, 413:508] # crop right
-# 	if _startx is None or _starty is None:
-# 		startx, starty = __crop__(img, cropx, cropy, depth)
-# 	else:
-# 		startx, starty = _startx, _starty
-# 	startx += 140
-# 	return img[starty:starty + cropy, startx:startx + cropx]
-
-
-# if __name__ == '__main__':
-# 	import cv2
-#
-# 	filename = "/home/alberto/Documents/LambSM/savings/color/lamb/2019-10-04/2019-10-04 11:37:56.660649_cam01_color.png"
-# 	image_color = cv2.imread(filename)
-# 	filename.replace("color", "depth")
-# 	image_depth = cv2.imread(filename)
-# 	isLamb(image_color, depth=False)
-# 	isLamb(image_depth, depth=True)
