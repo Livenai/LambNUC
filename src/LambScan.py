@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 #
@@ -63,29 +63,23 @@ import signal
 from PySide2 import QtCore
 
 from specificworker import *
-import RoboCompCommonBehavior
 
 
 class CommonBehaviorI(RoboCompCommonBehavior.CommonBehavior):
 	def __init__(self, _handler):
 		self.handler = _handler
-
-	def getFreq(self, current=None):
+	def getFreq(self, current = None):
 		self.handler.getFreq()
-
-	def setFreq(self, freq, current=None):
+	def setFreq(self, freq, current = None):
 		self.handler.setFreq()
-
-	def timeAwake(self, current=None):
+	def timeAwake(self, current = None):
 		try:
 			return self.handler.timeAwake()
 		except:
 			print('Problem getting timeAwake')
-
-	def killYourSelf(self, current=None):
+	def killYourSelf(self, current = None):
 		self.handler.killYourSelf()
-
-	def getAttrList(self, current=None):
+	def getAttrList(self, current = None):
 		try:
 			return self.handler.getAttrList()
 		except:
@@ -94,12 +88,10 @@ class CommonBehaviorI(RoboCompCommonBehavior.CommonBehavior):
 			status = 1
 			return
 
-
-# SIGNALS handler
+#SIGNALS handler
 def sigint_handler(*args):
 	QtCore.QCoreApplication.quit()
-
-
+    
 if __name__ == '__main__':
 	app = QtCore.QCoreApplication(sys.argv)
 	params = copy.deepcopy(sys.argv)
