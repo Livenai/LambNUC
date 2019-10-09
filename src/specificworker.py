@@ -29,11 +29,13 @@ from genericworker import *
 from FileManager import save_frames, FileManager
 from PySide2 import QtCore
 from rs_camera import isThereALamb, RSCamera
+import signal
 
 
 class SpecificWorker(GenericWorker):
 	def __init__(self, proxy_map):
 		super(SpecificWorker, self).__init__(proxy_map)
+		self.exit = False
 		self.no_cam = 0
 		self.no_memory = 0
 		self.Period = 1000  # 1 second for frame
@@ -48,6 +50,10 @@ class SpecificWorker(GenericWorker):
 		self.frame = (None, None)
 
 		self.Application.start()
+
+	def receive_signal(self, signum, stack):
+		print("\n\n\t[eCtrl + C]\n\n")
+		self.exit = True
 
 	def __del__(self):
 		print('SpecificWorker destructor')
@@ -68,6 +74,7 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_init(self):
 		print("Entered state init")
+		signal.signal(signal.SIGINT, self.receive_signal)
 		self.t_init_to_lambscan.emit()
 
 	#
@@ -109,6 +116,9 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_get_frames(self):
 		print("Entered state get_frames")
+		if self.exit:
+			print("\n\n\t[!] Ctrl + C received. Closing program...\n\n")
+			self.t_get_frames_to_send_message.emit()
 		self.timer.start()
 		try:
 			while self.timer.remainingTime() > 0:
