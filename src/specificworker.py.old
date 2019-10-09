@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019 by YOUR NAME HERE
@@ -19,7 +19,8 @@
 #    along with RoboComp.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from genericworker import *
+
+# from genericworker import *
 
 # If RoboComp was compiled with Python bindings you can use InnerModel in Python
 # sys.path.append('/opt/robocomp/lib')
@@ -27,28 +28,30 @@ from genericworker import *
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
 from FileManager import save_frames, FileManager
+from genericworker import GenericWorker
 from PySide2 import QtCore
+
 from rs_camera import isThereALamb, RSCamera
+# from PySide2.QtCore import QTimer
 
 
 class SpecificWorker(GenericWorker):
 	def __init__(self, proxy_map):
-		def __init__(self, proxy_map):
-			super(SpecificWorker, self).__init__(proxy_map)
-			self.no_cam = 0
-			self.no_memory = 0
-			self.Period = 1000  # 1 second for frame
-			self.Saver_period = 1000 * 60 * 25  # 25 min for a random picture
-			self.saver_timer = QtCore.QTimer(self)
-			self.timer.setInterval(self.Period)
-			self.timer.setSingleShot(True)
-			self.saver_timer.setInterval(self.Saver_period)
-			self.saver_timer.setSingleShot(True)
+		super(SpecificWorker, self).__init__(proxy_map)
+		self.no_cam = 0
+		self.no_memory = 0
+		self.Period = 1000  # 1 second for frame
+		self.Saver_period = 1000 * 60 * 25  # 25 min for a random picture
+		self.saver_timer = QtCore.QTimer(self)
+		self.timer.setInterval(self.Period)
+		self.timer.setSingleShot(True)
+		self.saver_timer.setInterval(self.Saver_period)
+		self.saver_timer.setSingleShot(True)
 
-			self.camera = None
-			self.frame = (None, None)
+		self.camera = None
+		self.frame = (None, None)
 
-			self.Application.start()
+		self.Application.start()
 
 	def __del__(self):
 		print('SpecificWorker destructor')
@@ -58,7 +61,7 @@ class SpecificWorker(GenericWorker):
 		#	self.innermodel = InnerModel(params["InnerModelPath"])
 		# except:
 		#	traceback.print_exc()
-		#	print("Error reading config params")
+		#	print "Error reading config params"
 		return True
 
 	# =============== Slots methods for State Machine ===================
@@ -153,7 +156,7 @@ class SpecificWorker(GenericWorker):
 		lamb, path_name = isThereALamb(*self.frame)
 		self.lamb_path = path_name
 		if lamb or self.saver_timer.remainingTime() == 0:
-			# TODO: esta linea debe ser descomentada para el transcurso
+			#TODO: esta linea debe ser descomentada para el transcurso
 			# normal del programa. Ahora esta comentada para que se quede encerrado entre este estado y get_frames.
 			# La segunda linea debe ser borrada para el transcurso normal del programa.
 			# self.t_processing_and_filter_to_save.emit()
