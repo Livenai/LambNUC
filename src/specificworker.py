@@ -28,7 +28,8 @@ from genericworker import *
 # import librobocomp_innermodel
 from FileManager import save_frames, FileManager
 from PySide2 import QtCore
-from rs_camera import isThereALamb, RSCamera
+from rs_camera import RSCamera
+from lamb_filter import isThereALamb
 import signal
 
 
