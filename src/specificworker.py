@@ -119,7 +119,7 @@ class SpecificWorker(GenericWorker):
 		print("Entered state get_frames")
 		if self.exit:
 			print("\n\n\t[!] Ctrl + C received. Closing program...\n\n")
-			self.t_get_frames_to_send_message.emit()
+			self.t_get_frames_to_exit.emit()
 		self.timer.start()
 		try:
 			while self.timer.remainingTime() > 0:
@@ -200,10 +200,7 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_exit(self):
 		print("Entered state exit")
-		try:
-			self.camera.stop()
-		except:
-			pass
+		self.camera.__del__()
 		self.t_lambscan_to_end.emit()
 
 # =================================================================

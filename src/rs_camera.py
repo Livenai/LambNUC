@@ -12,7 +12,8 @@ class RSCamera:
 		self.__config__ = rs.config()
 		self.__config__.enable_stream(rs.stream.depth, __WIDTH__, __HEIGHT__, rs.format.z16, 30)
 		self.__config__.enable_stream(rs.stream.color, __WIDTH__, __HEIGHT__, rs.format.bgr8, 30)
-		# self.__config__.enable_stream(rs.stream.infrared)
+
+	# self.__config__.enable_stream(rs.stream.infrared)
 
 	def __del__(self):
 		try:
@@ -73,7 +74,7 @@ def isThereALamb(color_image, depth_image):
 	:return: tupe(bool, string) the string shows more info about the image;
 		it might be there's a part of a lamb in the image (still False).
 	"""
-	# color_result = isLamb(color_image)  	# Not used right now. It'll be used.
+	# color_result = isLamb(color_image, depth=False)  	# Not used right now. It'll be used.
 	depth_result = __isLamb__(depth_image, depth=True)
 	# if not (False in color_result or False in depth_result):
 	# 	print("There's a Lamb")
@@ -96,13 +97,14 @@ def isThereALamb(color_image, depth_image):
 
 	# -------- DEPTH --------
 	if not (False in depth_result):
-		print("\t\t\t\t\tdepth: Lamb")
+		print("\t\t\t\t\tdepth image: There's a Lamb")
 		return True, "lamb"
 	elif not (True in depth_result):
-		print("\t\t\t\t\tdepth: NO lamb")
+		print("\t\t\t\t\tdepth image: There's NO lamb")
 		return False, "no_lamb"
 	else:
-		print("\t\t\t\t\tdepth: Error")
+		print("\t\t\t\t\tdepth image: There's something (error)")
+		print("\t\t\tDepth Image detected a lamb in: ", depth_result)
 		return False, "error"
 
 
