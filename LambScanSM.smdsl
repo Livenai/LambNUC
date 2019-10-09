@@ -18,9 +18,9 @@ Application
     transitions
     {
         start_streams => get_frames, no_camera, send_message;
-        get_frames => processing_and_filter, no_camera, get_frames, send_message;
-        processing_and_filter => get_frames, save, send_message;
-        save => get_frames, no_memory, send_message;
+        get_frames => processing_and_filter, no_camera, get_frames, exit;
+        processing_and_filter => get_frames, save;
+        save => get_frames, no_memory;
         no_camera => start_streams, send_message;
         no_memory => save, send_message;
         send_message => exit;
