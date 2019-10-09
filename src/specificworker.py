@@ -33,22 +33,21 @@ from rs_camera import isThereALamb, RSCamera
 
 class SpecificWorker(GenericWorker):
 	def __init__(self, proxy_map):
-		def __init__(self, proxy_map):
-			super(SpecificWorker, self).__init__(proxy_map)
-			self.no_cam = 0
-			self.no_memory = 0
-			self.Period = 1000  # 1 second for frame
-			self.Saver_period = 1000 * 60 * 25  # 25 min for a random picture
-			self.saver_timer = QtCore.QTimer(self)
-			self.timer.setInterval(self.Period)
-			self.timer.setSingleShot(True)
-			self.saver_timer.setInterval(self.Saver_period)
-			self.saver_timer.setSingleShot(True)
+		super(SpecificWorker, self).__init__(proxy_map)
+		self.no_cam = 0
+		self.no_memory = 0
+		self.Period = 1000  # 1 second for frame
+		self.Saver_period = 1000 * 60 * 25  # 25 min for a random picture
+		self.saver_timer = QtCore.QTimer(self)
+		self.timer.setInterval(self.Period)
+		self.timer.setSingleShot(True)
+		self.saver_timer.setInterval(self.Saver_period)
+		self.saver_timer.setSingleShot(True)
 
-			self.camera = None
-			self.frame = (None, None)
+		self.camera = None
+		self.frame = (None, None)
 
-			self.Application.start()
+		self.Application.start()
 
 	def __del__(self):
 		print('SpecificWorker destructor')
@@ -69,7 +68,6 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_init(self):
 		print("Entered state init")
-		# self.camera = AppState()
 		self.t_init_to_lambscan.emit()
 
 	#
@@ -96,11 +94,13 @@ class SpecificWorker(GenericWorker):
 		print("Entered state start_streams")
 		try:
 			self.camera = RSCamera()
-			self.camera.start()
-			self.saver_timer.start()
-			self.t_start_streams_to_get_frames.emit()
+			if self.camera.start():
+				self.saver_timer.start()
+				self.t_start_streams_to_get_frames.emit()
+			else:
+				raise Exception("It couldn't start the streams")
 		except Exception as e:
-			print(("problem starting the streams of the camera\n", e))
+			print("problem starting the streams of the camera\n", e)
 			self.t_start_streams_to_no_camera.emit()
 
 	#
@@ -113,11 +113,12 @@ class SpecificWorker(GenericWorker):
 		try:
 			while self.timer.remainingTime() > 0:
 				self.frame = self.camera.get_frame()
-			self.timer.stop()
+			# self.timer.stop()
 			self.t_get_frames_to_processing_and_filter.emit()
 		except Exception as e:
 			# TODO: comprobar si esto funciona. Cuando desconectas la camara, salta una excepcion en vez de entrar aqui.
-			print(("Error taking the frame\n", e))
+			print("An error occur when taking a new frame,:\n " + str(e))
+			print(type(e))
 			self.t_get_frames_to_no_camera.emit()
 
 	#
@@ -126,6 +127,11 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_no_camera(self):
 		print("Entered state no_camera")
+		try:
+			self.camera.stop()
+		except:
+			pass
+		self.camera = None
 		self.no_cam += 1
 		if self.no_cam > 12:
 			self.t_no_camera_to_send_message.emit()
@@ -189,6 +195,10 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_exit(self):
 		print("Entered state exit")
+		try:
+			self.camera.stop()
+		except:
+			pass
 		self.t_lambscan_to_end.emit()
 
 # =================================================================
