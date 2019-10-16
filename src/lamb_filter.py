@@ -1,10 +1,6 @@
 import cv2
 import numpy as np
 
-# Constants to filter and crop the numpy images
-# __edged_RGB__ = 140  # no lamb > edged > lamb
-# __edged_Depth__ = 1100  # no lamb > edged > lamb
-
 # zona de interes
 Yi = 185
 Xi = 14
@@ -15,12 +11,12 @@ Wi = 544
 voxel_scale_percent = 10
 
 # umbral de recuento de voxels
-voxel_threshold = 900  # 932 aprox.
+voxel_threshold = 1000  # 932 aprox.
 
 # establecemos los umbrales
 __top_threshold__ = 800
-__bottom_threshold__ = 320
-__under_bottom_threshold__ = 180
+__bottom_threshold__ = 430
+__under_bottom_threshold__ = 100
 
 
 def isThereALamb(color_image, depth_image):
@@ -31,18 +27,10 @@ def isThereALamb(color_image, depth_image):
 	:return: tupe(bool, string) the string shows more info about the image;
 		it might be there's a part of a lamb in the image (still False).
 	"""
-	# color_result = isLamb(color_image, depth=False)  # Old implementation
-	# depth_result = isLamb(depth_image, depth=True)  # Old implementation
-	# color_result = __isLamb2__(color_image) # Not used right now. It'll be used.
 	depth_result = __isLamb__(depth_image)
-
-	# TODO: hay que mejorar el algoritmo que dice si hay oveja o no.
-	#  depth_result guarda ahora el numero de voxels que han superado el umbral.
-
-	print("\tNum Voxel:\t " + str(depth_result))
+	# print("\tNum Voxel:\t " + str(depth_result))
 
 	# comprobamos el numero para determinar que se ha detectado
-	# if 0 <= depth_result < __under_bottom_threshold__:
 	if __bottom_threshold__ <= depth_result < __top_threshold__:
 		print("\tThere's a lamb")
 		return True, "lamb"
@@ -61,42 +49,16 @@ def isThereALamb(color_image, depth_image):
 	return True, "to_check"
 
 
-# @Deprecated
-# def __isLamb__(image, depth=False):
-# 	"""
-# 		Check if there is something in the image given by parameter
-# 	:param image:
-# 	:param depth:
-# 	:return:
-# 	"""
-# 	average_left = np.mean(image[263:308, 113:208])  # crop left
-# 	average_center = np.mean(image[263:308, 273:368])  # crop center
-# 	average_right = np.mean(image[263:308, 413:508])  # crop right
-#
-# 	if depth:
-# 		result = (average_left < __edged_Depth__,
-# 				  average_center < __edged_Depth__, average_right < __edged_Depth__)
-#
-# 	else:
-# 		result = (average_left > __edged_RGB__,
-# 				  average_center > __edged_RGB__, average_right > __edged_RGB__)
-#
-# 	return result
-
-
 def __isLamb__(image):
 	"""
-	It crops the given image in a
-		Función que recorta la imagen en la zona de interes (donde se debe de encontrar la lamb)
-		y reduce la imagen a un mapa de voxels. Estos voxels son la media aritmetica de
-		los pixeles que abarca.
-		La funcion devuelve el numero de voxels que superan el umbral de deteccion de lamb.
-	:param image:
-	:param depth:
-	:return:
+	Función que recorta la imagen en la zona de interes (donde se debe de encontrar la lamb)
+	y reduce la imagen a un mapa de voxels. Estos voxels son la media aritmetica de
+	los pixeles que abarca.
+	La funcion devuelve el numero de voxels que superan el umbral de deteccion de lamb.
+	:param image: numpy array with (640x480x1) shape (in case of depth image, which is the case;
+	but it could be (640x480x3) of shape if we use a color image).
+	:return: int with the sumatory of the voxels which satisfied the detection condition.
 	"""
-	# result = -1
-
 	# recortamos en la zona de interes
 	image_crop = image[Yi:Yi + Hi, Xi:Xi + Wi]
 
@@ -106,11 +68,5 @@ def __isLamb__(image):
 	dim = (width, height)
 	resized_image = cv2.resize(image_crop, dim, interpolation=cv2.INTER_LANCZOS4)
 
-	return (resized_image <= voxel_threshold).sum()
-	# # contamos los voxels que superan el umbral
-	# for fila in resized_image:
-	# 	for voxel in fila:
-	# 		if voxel <= voxel_threshold:
-	# 			result += 1
-
-	# return result + 1
+	# return (resized_image <= voxel_threshold).sum()
+	return np.count_nonzero(resized_image <= voxel_threshold)

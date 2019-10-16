@@ -11,14 +11,13 @@ class FileManager(Exception):
 def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
 	ts = time.time()
 	if id_crotal is not None:
-		mypath = os.getcwd()
+		mypath = os.path.join("~", "LambSM")
 
 		def mkdirs(current_path, paths):
 			path = current_path
 			for folder in paths:
 				path = os.path.join(path, str(folder))
 				if not os.path.exists(path):
-					print("sdf")
 					os.mkdir(path)
 			return path
 
