@@ -28,12 +28,12 @@
 #
 # \section interface_sec Interface
 #
-# Descroption of the interface provided...
+# Description of the interface provided...
 #
 # \section install_sec Installation
 #
-# \subsection install1_ssec Software depencences
-# Software dependences....
+# \subsection install1_ssec Software dependencies
+# Software dependencies....
 #
 # \subsection install2_ssec Compile and install
 # How to compile/install the component...
@@ -68,18 +68,23 @@ from specificworker import *
 class CommonBehaviorI(RoboCompCommonBehavior.CommonBehavior):
 	def __init__(self, _handler):
 		self.handler = _handler
-	def getFreq(self, current = None):
+
+	def getFreq(self, current=None):
 		self.handler.getFreq()
-	def setFreq(self, freq, current = None):
+
+	def setFreq(self, freq, current=None):
 		self.handler.setFreq()
-	def timeAwake(self, current = None):
+
+	def timeAwake(self, current=None):
 		try:
 			return self.handler.timeAwake()
 		except:
 			print('Problem getting timeAwake')
-	def killYourSelf(self, current = None):
+
+	def killYourSelf(self, current=None):
 		self.handler.killYourSelf()
-	def getAttrList(self, current = None):
+
+	def getAttrList(self, current=None):
 		try:
 			return self.handler.getAttrList()
 		except:
@@ -88,10 +93,12 @@ class CommonBehaviorI(RoboCompCommonBehavior.CommonBehavior):
 			status = 1
 			return
 
-#SIGNALS handler
+
+# SIGNALS handler
 def sigint_handler(*args):
 	QtCore.QCoreApplication.quit()
-    
+
+
 if __name__ == '__main__':
 	app = QtCore.QCoreApplication(sys.argv)
 	params = copy.deepcopy(sys.argv)

@@ -9,9 +9,17 @@ class FileManager(Exception):
 
 
 def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
+	"""
+	It saves the current frame to a file for each type of frame (2: color and depth)
+	it also creates the folders needed to the specified path of the files.
+	:param color_frame: numpy array with (640x480x3) of shape, the color image.
+	:param depth_frame: numpy array with (640x480x1) of shape, the depth image.
+	:param id_crotal: string with the info of the lamb which is in the image.
+	:param cam: string with the info of the camera where the frames have been taken.
+	"""
 	ts = time.time()
 	if id_crotal is not None:
-		mypath = os.path.join("~", "LambSM")
+		mypath = os.path.join(os.path.expanduser('~'), 'LambSM')
 
 		def mkdirs(current_path, paths):
 			path = current_path
@@ -42,7 +50,6 @@ def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
 			cv2.imwrite(filename=filename, img=depth_frame)
 		else:
 			raise FileManager("filename incorrect!!")
-	return
 
 
 def __is_new_file_correct__(file):

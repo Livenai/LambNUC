@@ -31,6 +31,7 @@ from PySide2 import QtCore
 from rs_camera import RSCamera
 from lamb_filter import isThereALamb
 import signal
+from send_message import send_msg
 
 
 class SpecificWorker(GenericWorker):
@@ -75,6 +76,7 @@ class SpecificWorker(GenericWorker):
 	#
 	@QtCore.Slot()
 	def sm_init(self):
+		""" First state of the state machine, it triggers the LambScan main state """
 		print("Entered state init")
 		signal.signal(signal.SIGINT, self.receive_signal)
 		self.t_init_to_lambscan.emit()
@@ -84,6 +86,7 @@ class SpecificWorker(GenericWorker):
 	#
 	@QtCore.Slot()
 	def sm_lambscan(self):
+		""" The main state of the state machine, it is a sub state machine itself."""
 		print("Entered state lambscan")
 
 	#
@@ -91,7 +94,10 @@ class SpecificWorker(GenericWorker):
 	#
 	@QtCore.Slot()
 	def sm_end(self):
+		""" Its closes the whole application and exit of the program.
+		it's the last state of the state machine. """
 		print("Entered state end")
+		self.Application.stop()
 		from PySide2.QtWidgets import QApplication
 		QApplication.quit()
 
@@ -128,7 +134,6 @@ class SpecificWorker(GenericWorker):
 			# self.timer.stop()
 			self.t_get_frames_to_processing_and_filter.emit()
 		except Exception as e:
-			# TODO: comprobar si esto funciona. Cuando desconectas la camara, salta una excepcion en vez de entrar aqui.
 			print("An error occur when taking a new frame,:\n " + str(e))
 			print(type(e))
 			self.t_get_frames_to_no_camera.emit()
@@ -142,7 +147,7 @@ class SpecificWorker(GenericWorker):
 		self.camera.__del__()
 		self.camera = None
 		self.no_cam += 1
-		if self.no_cam > 12:
+		if self.no_cam >= 12:
 			self.t_no_camera_to_send_message.emit()
 		else:
 			self.t_no_camera_to_start_streams.emit()
@@ -179,7 +184,7 @@ class SpecificWorker(GenericWorker):
 	def sm_save(self):
 		print("Entered state save")
 		try:
-			save_frames(*self.frame, self.lamb_path)
+			save_frames(*self.frame, id_crotal=self.lamb_path)
 			self.saver_timer.start()
 			self.t_save_to_get_frames.emit()
 		except FileManager as e:
@@ -191,8 +196,12 @@ class SpecificWorker(GenericWorker):
 	#
 	@QtCore.Slot()
 	def sm_send_message(self):
-		print("Entered state send_message")
-		print("- Not implemented yet, send an email to the developers.")
+		if self.no_cam > 0:
+			send_msg("[ ! ] Camara desconectada. " + str(self.no_cam) + " intentos de reconexion agotados.")
+		elif self.no_memory > 0:
+			send_msg("[ ! ] Error en la memoria del dispositivo. " + str(self.no_memory) + " intentos de escritura agotados.")
+		else:
+			send_msg("[ ? ] Estado SEND_MESSAGE incoherente. Se ha accedido a este estado sin que haya un error.")
 		self.t_send_message_to_exit.emit()
 
 	#
@@ -201,7 +210,7 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def sm_exit(self):
 		print("Entered state exit")
-		self.camera.__del__()
+		#self.camera.__del__()
 		self.t_lambscan_to_end.emit()
 
 # =================================================================

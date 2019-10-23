@@ -2,16 +2,16 @@ import cv2
 import numpy as np
 
 # zona de interes
-Yi = 185
-Xi = 14
-Hi = 211
-Wi = 544
+Yi = 206
+Xi = 113
+Hi = 168
+Wi = 462
 
 # porcentaje de reduccion del mapa de voxels
 voxel_scale_percent = 10
 
 # umbral de recuento de voxels
-voxel_threshold = 1000  # 932 aprox.
+voxel_threshold = 1000  # 1000 aprox.
 
 # establecemos los umbrales
 __top_threshold__ = 800
@@ -24,11 +24,11 @@ def isThereALamb(color_image, depth_image):
 	Asks if the current image has a lamb in a right position
 	:param color_image: numpy array (640, 480, 3) shape RGB image.
 	:param depth_image: numpy array (640, 480, 1) shape Depth image.
-	:return: tupe(bool, string) the string shows more info about the image;
+	:return: tuple(bool, string) the string shows more info about the image;
 		it might be there's a part of a lamb in the image (still False).
 	"""
 	depth_result = __isLamb__(depth_image)
-	# print("\tNum Voxel:\t " + str(depth_result))
+	print("\tNum Voxel:\t " + str(depth_result))
 
 	# comprobamos el numero para determinar que se ha detectado
 	if __bottom_threshold__ <= depth_result < __top_threshold__:
@@ -38,11 +38,11 @@ def isThereALamb(color_image, depth_image):
 		print("\tThere's no lamb")
 		return False, "no_lamb"
 	elif depth_result < __bottom_threshold__:
-		print("\tThere's something (prob. a lamb in a wrong position")
-		return False, "error"
+		print("\tThere's something (prob. a lamb in a wrong position)")
+		return True, "error"
 	elif __top_threshold__ <= depth_result:
 		print("\tSomething is covering the camera")
-		return False, "error"
+		return True, "error"
 	else:
 		print("[!] Impossible print. Something is wrong in isThereALamb()")
 
@@ -68,5 +68,10 @@ def __isLamb__(image):
 	dim = (width, height)
 	resized_image = cv2.resize(image_crop, dim, interpolation=cv2.INTER_LANCZOS4)
 
-	# return (resized_image <= voxel_threshold).sum()
+	#return (resized_image <= voxel_threshold).sum()
 	return np.count_nonzero(resized_image <= voxel_threshold)
+	# # contamos los voxels que superan el umbral
+	# for fila in resized_image:
+	# 	for voxel in fila:
+	# 		if voxel <= voxel_threshold:
+	# 			result += 1
