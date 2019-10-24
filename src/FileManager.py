@@ -8,6 +8,38 @@ class FileManager(Exception):
 	pass
 
 
+def get_saved_info():
+	def get_items_in_dir(dirname):
+		files = []
+		for (dirpath, dirnames, filenames) in os.walk(dirname):
+			files += [os.path.join(dirpath, file) for file in filenames]
+		return files
+
+	def get_size(files):
+		return str(round(sum([os.path.getsize(x) for x in files]) / (1024 * 1024), 2)) + " MB"
+
+	def make_info(path):
+		items = get_items_in_dir(path)
+		info = {"n_color": len(items), "size_color": get_size(items), "n_depth": None, "size_depth": None}
+		items = list(map(lambda x: x.replace("color", "depth"), items))
+		info["n_depth"] = len(items)
+		info["size_depth"] = get_size(items)
+		return info
+
+	paths = (os.path.join(os.path.expanduser("~"), "LambSM", "savings", "color", "lamb"),
+			 os.path.join(os.path.expanduser("~"), "LambSM", "savings", "color", "no_lamb"),
+			 os.path.join(os.path.expanduser("~"), "LambSM", "savings", "color", "error"))
+	info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "error": make_info(paths[2])}
+	import json
+	result = json.dumps(info_msg, indent=4)
+	print(result)
+	return info_msg
+
+#
+# if __name__ == '__main__':
+# 	get_saved_info()
+
+
 def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
 	"""
 	It saves the current frame to a file for each type of frame (2: color and depth)

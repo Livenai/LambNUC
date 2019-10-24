@@ -26,7 +26,7 @@ from genericworker import *
 # import librobocomp_qmat
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
-from FileManager import save_frames, FileManager
+from FileManager import save_frames, FileManager, get_saved_info
 from PySide2 import QtCore
 from rs_camera import RSCamera
 from lamb_filter import isThereALamb
@@ -47,6 +47,12 @@ class SpecificWorker(GenericWorker):
 		self.timer.setSingleShot(True)
 		self.saver_timer.setInterval(self.Saver_period)
 		self.saver_timer.setSingleShot(True)
+
+		self.Info_period = 1000 * 60 * 4  # 4 min for get an info message
+		# self.Info_period = 1000 * 60 * 60 * 72  # 3 days for get an info message
+		self.info_timer = QtCore.QTimer(self)
+		self.info_timer.setInterval(self.Saver_period)
+		self.info_timer.setSingleShot(True)
 
 		self.camera = None
 		self.lamb_path = ""
@@ -111,6 +117,7 @@ class SpecificWorker(GenericWorker):
 			self.camera = RSCamera()
 			if self.camera.start():
 				self.saver_timer.start()
+				self.info_timer.start()
 				self.t_start_streams_to_get_frames.emit()
 			else:
 				raise Exception("It couldn't start the streams")
@@ -128,6 +135,8 @@ class SpecificWorker(GenericWorker):
 			print("\n\n\t[!] Ctrl + C received. Closing program...\n\n")
 			self.t_get_frames_to_exit.emit()
 		self.timer.start()
+		if self.info_timer.remainingTime() > 0:
+			send_msg(get_saved_info())
 		try:
 			while self.timer.remainingTime() > 0:
 				self.frame = self.camera.get_frame()
