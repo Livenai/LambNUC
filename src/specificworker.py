@@ -137,7 +137,7 @@ class SpecificWorker(GenericWorker):
 		self.timer.start()
 		if self.info_timer.remainingTime() == 0:
 			send_msg(get_saved_info())
-			self.saver_timer.start()
+			self.info_timer.start()
 		try:
 			self.frame = self.camera.get_frame()
 			while self.timer.remainingTime() > 0:

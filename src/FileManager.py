@@ -32,15 +32,12 @@ def get_saved_info():
 	info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "error": make_info(paths[2])}
 	from json import dumps
 	from subprocess import check_output
-	result = dumps(info_msg, indent=4) + "\n" + str(check_output(['df', '-H', '/dev/sda1']), encoding="ascii")
-	# result = dumps(info_msg, indent=4) + "\n" + str(check_output(['df', '-H', '/dev/sda2']), encoding="ascii")
-	# print(result)
+	space_available = str(check_output(['df', '-H', '/dev/sda2']), encoding="ascii").replace("Mounted on",
+																							 "Mounted_on").split()
+	space_available = dict(zip(space_available[0:6], space_available[7:]))
+
+	result = dumps(info_msg, indent=4) + "\n" + dumps(space_available, indent=4)
 	return result
-
-
-
-# if __name__ == '__main__':
-# 	get_saved_info()
 
 
 def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
