@@ -48,10 +48,10 @@ class SpecificWorker(GenericWorker):
 		self.saver_timer.setInterval(self.Saver_period)
 		self.saver_timer.setSingleShot(True)
 
-		self.Info_period = 1000 * 60 * 4  # 4 min for get an info message
+		self.Info_period = 1000 * 10  # 10 sec for get an info message
 		# self.Info_period = 1000 * 60 * 60 * 72  # 3 days for get an info message
 		self.info_timer = QtCore.QTimer(self)
-		self.info_timer.setInterval(self.Saver_period)
+		self.info_timer.setInterval(self.Info_period)
 		self.info_timer.setSingleShot(True)
 
 		self.camera = None
@@ -135,12 +135,13 @@ class SpecificWorker(GenericWorker):
 			print("\n\n\t[!] Ctrl + C received. Closing program...\n\n")
 			self.t_get_frames_to_exit.emit()
 		self.timer.start()
-		if self.info_timer.remainingTime() > 0:
+		if self.info_timer.remainingTime() == 0:
 			send_msg(get_saved_info())
+			self.saver_timer.start()
 		try:
+			self.frame = self.camera.get_frame()
 			while self.timer.remainingTime() > 0:
 				self.frame = self.camera.get_frame()
-			# self.timer.stop()
 			self.t_get_frames_to_processing_and_filter.emit()
 		except Exception as e:
 			print("An error occur when taking a new frame,:\n " + str(e))

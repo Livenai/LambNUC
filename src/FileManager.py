@@ -30,12 +30,15 @@ def get_saved_info():
 			 os.path.join(os.path.expanduser("~"), "LambSM", "savings", "color", "no_lamb"),
 			 os.path.join(os.path.expanduser("~"), "LambSM", "savings", "color", "error"))
 	info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "error": make_info(paths[2])}
-	import json
-	result = json.dumps(info_msg, indent=4)
-	print(result)
-	return info_msg
+	from json import dumps
+	from subprocess import check_output
+	result = dumps(info_msg, indent=4) + "\n" + str(check_output(['df', '-H', '/dev/sda1']), encoding="ascii")
+	# result = dumps(info_msg, indent=4) + "\n" + str(check_output(['df', '-H', '/dev/sda2']), encoding="ascii")
+	# print(result)
+	return result
 
-#
+
+
 # if __name__ == '__main__':
 # 	get_saved_info()
 
