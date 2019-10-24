@@ -34,7 +34,7 @@ def get_saved_info():
 	from subprocess import check_output
 	space_available = str(check_output(['df', '-H', '/dev/sda2']), encoding="ascii").replace("Mounted on",
 																							 "Mounted_on").split()
-	space_available = dict(zip(space_available[0:6], space_available[7:]))
+	space_available = dict(zip(space_available[0:6], space_available[6:]))
 
 	result = dumps(info_msg, indent=4) + "\n" + dumps(space_available, indent=4)
 	return result
