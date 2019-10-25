@@ -10,3 +10,9 @@ src/savings/
 savings/*
 
 PY2venv/
+
+etc/telegram_token.txt
+
+etc/telegram_ids.cfg
+
+etc/ngrok

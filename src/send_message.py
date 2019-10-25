@@ -3,16 +3,16 @@
 import telepot
 import os
 
-
 def send_msg(text: str):
 	print("\n\n========      Enviando mensaje      ========\n")
 	print("cuerpo:\"" + text + "\"\n")
 
 	try:
 		# iniciamos el bot
-		token = os.environ['telegram_token']
+		with open(os.path.join(os.path.expanduser("~"), "LambSM", "etc", "telegram_token.txt"), "r") as f:
+			token = f.readline()
 		BOT = telepot.Bot(token)
-		telegram_config = os.path.join(os.path.expanduser("~"), "LambSM", "src", "telegram_ids.cfg")
+		telegram_config = os.path.join(os.path.expanduser("~"), "LambSM", "etc", "telegram_ids.cfg")
 
 		# obtenemos los IDs a los que vamos a enviar el mensaje y enviamos el mensaje a cada ID
 		with open(telegram_config, "r") as f:
