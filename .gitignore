@@ -11,8 +11,8 @@ savings/*
 
 PY2venv/
 
-etc/telegram_token.txt
+*/telegram_token.txt
 
-etc/telegram_ids.cfg
+*/telegram_ids.cfg
 
 etc/ngrok
