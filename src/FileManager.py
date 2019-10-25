@@ -32,9 +32,8 @@ def get_saved_info():
 	info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "error": make_info(paths[2])}
 	from json import dumps
 	from subprocess import check_output
-	space_available = str(check_output(['df', '-H', '/dev/sda2']), encoding="ascii").replace("Mounted on",
-																							 "Mounted_on").split()
-	space_available = dict(zip(space_available[0:6], space_available[6:]))
+	space_available = str(check_output(['df', '-H', '/dev/sda2']), encoding="latin1").replace("Tama\u00c3\u00b1o", "Total_Size").split()
+	space_available = dict(zip(space_available[0:6], space_available[7:]))
 
 	result = dumps(info_msg, indent=4) + "\n" + dumps(space_available, indent=4)
 	return result
