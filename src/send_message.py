@@ -10,7 +10,7 @@ def send_msg(text: str):
 	try:
 		# iniciamos el bot
 		with open(os.path.join(os.path.expanduser("~"), "LambSM", "etc", "telegram_token.txt"), "r") as f:
-			token = f.readline()
+			token = f.readline()[:-1]
 		BOT = telepot.Bot(token)
 		telegram_config = os.path.join(os.path.expanduser("~"), "LambSM", "etc", "telegram_ids.cfg")
 
