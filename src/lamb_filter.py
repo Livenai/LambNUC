@@ -2,16 +2,16 @@ import cv2
 import numpy as np
 
 # zona de interes
-Yi = 206
-Xi = 113
-Hi = 168
-Wi = 462
+Yi = 146
+Xi = 52
+Hi = 161
+Wi = 538
 
 # porcentaje de reduccion del mapa de voxels
 voxel_scale_percent = 10
 
 # umbral de recuento de voxels
-voxel_threshold = 1000  # 1000 aprox.
+voxel_threshold = 1150  # 1000 aprox.
 
 # establecemos los umbrales
 __top_threshold__ = 800
@@ -29,6 +29,8 @@ def isThereALamb(color_image, depth_image):
 	"""
 	depth_result = __isLamb__(depth_image)
 	print("\tNum Voxel:\t " + str(depth_result))
+	error_random = not bool(np.random.randint(150))
+	no_lamb_random = not bool(np.random.randint(80))
 
 	# comprobamos el numero para determinar que se ha detectado
 	if __bottom_threshold__ <= depth_result < __top_threshold__:
@@ -36,13 +38,13 @@ def isThereALamb(color_image, depth_image):
 		return True, "lamb"
 	elif depth_result < __under_bottom_threshold__:
 		print("\tThere's no lamb")
-		return False, "no_lamb"
+		return no_lamb_random, "no_lamb"
 	elif depth_result < __bottom_threshold__:
 		print("\tThere's something (prob. a lamb in a wrong position)")
-		return True, "error"
+		return error_random, "error"
 	elif __top_threshold__ <= depth_result:
 		print("\tSomething is covering the camera")
-		return True, "error"
+		return error_random, "error"
 	else:
 		print("[!] Impossible print. Something is wrong in isThereALamb()")
 

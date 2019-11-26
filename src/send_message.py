@@ -19,6 +19,7 @@ def send_msg(text: str):
 			for user_id in f:
 				BOT.sendMessage(user_id, text)
 
+
 		print("\n\n======== Mensaje enviado correctamente ========\n")
 
 	except Exception as e:

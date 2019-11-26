@@ -48,8 +48,8 @@ class SpecificWorker(GenericWorker):
 		self.saver_timer.setInterval(self.Saver_period)
 		self.saver_timer.setSingleShot(True)
 
-		self.Info_period = 1000 * 10  # 10 sec for get an info message
-		# self.Info_period = 1000 * 60 * 60 * 72  # 3 days for get an info message
+		# self.Info_period = 1000 * 10  # 10 sec for get an info message
+		self.Info_period = 1000 * 60 * 60 * 8  # 8h for get an info message
 		self.info_timer = QtCore.QTimer(self)
 		self.info_timer.setInterval(self.Info_period)
 		self.info_timer.setSingleShot(True)
