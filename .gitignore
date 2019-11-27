@@ -16,3 +16,5 @@ PY2venv/
 */telegram_ids.cfg
 
 etc/ngrok
+
+.vscode/

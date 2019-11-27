@@ -5,5 +5,5 @@ Component LambScan
     {
     };
 	language python;
-	statemachine "LambScanSM.smdsl";
+	statemachine "LambScanNN.smdsl";
 };

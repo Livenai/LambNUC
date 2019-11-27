@@ -9,10 +9,10 @@ def send_msg(text: str):
 
 	try:
 		# iniciamos el bot
-		with open(os.path.join(os.path.expanduser("~"), "LambSM", "etc", "telegram_token.txt"), "r") as f:
+		with open(os.path.join(os.path.expanduser("~"), "LambNN", "etc", "telegram_token.txt"), "r") as f:
 			token = f.readline()[:-1]
 		BOT = telepot.Bot(token)
-		telegram_config = os.path.join(os.path.expanduser("~"), "LambSM", "etc", "telegram_ids.cfg")
+		telegram_config = os.path.join(os.path.expanduser("~"), "LambNN", "etc", "telegram_ids.cfg")
 
 		# obtenemos los IDs a los que vamos a enviar el mensaje y enviamos el mensaje a cada ID
 		with open(telegram_config, "r") as f:

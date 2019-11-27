@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+# TODO: load the NN model to predict 
+
 # zona de interes
 Yi = 146
 Xi = 52
@@ -32,19 +34,22 @@ def isThereALamb(color_image, depth_image):
 	error_random = not bool(np.random.randint(150))
 	no_lamb_random = not bool(np.random.randint(80))
 
+	# TODO: call the NN function and pack the result with the same result we're currently using right here
+
+
 	# comprobamos el numero para determinar que se ha detectado
 	if __bottom_threshold__ <= depth_result < __top_threshold__:
 		print("\tThere's a lamb")
 		return True, "lamb"
 	elif depth_result < __under_bottom_threshold__:
 		print("\tThere's no lamb")
-		return no_lamb_random, "no_lamb"
+		return no_lamb_random, "empty"
 	elif depth_result < __bottom_threshold__:
 		print("\tThere's something (prob. a lamb in a wrong position)")
-		return error_random, "error"
+		return error_random, "wrong"
 	elif __top_threshold__ <= depth_result:
 		print("\tSomething is covering the camera")
-		return error_random, "error"
+		return error_random, "fly"
 	else:
 		print("[!] Impossible print. Something is wrong in isThereALamb()")
 

@@ -26,9 +26,9 @@ def get_saved_info():
 		info["size_depth"] = get_size(items)
 		return info
 
-	paths = (os.path.join(os.path.expanduser("~"), "LambSM", "savings", "color", "lamb"),
-			 os.path.join(os.path.expanduser("~"), "LambSM", "savings", "color", "no_lamb"),
-			 os.path.join(os.path.expanduser("~"), "LambSM", "savings", "color", "error"))
+	paths = (os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "lamb"),
+			 os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "no_lamb"),
+			 os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "error"))
 	info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "error": make_info(paths[2])}
 	from json import dumps
 	from subprocess import check_output
@@ -50,7 +50,7 @@ def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
 	"""
 	ts = time.time()
 	if id_crotal is not None:
-		mypath = os.path.join(os.path.expanduser('~'), 'LambSM')
+		mypath = os.path.join(os.path.expanduser('~'), 'LambNN')
 
 		def mkdirs(current_path, paths):
 			path = current_path
