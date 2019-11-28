@@ -4,7 +4,7 @@ from urllib import request
 import json
 from datetime import datetime, date
 import cv2
-
+import numpy as np
 
 class FileManager(Exception):
     pass
@@ -94,7 +94,7 @@ def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
         mkdirs(mypath, ("savings", "depth", id_crotal, today))
     ts = time.time()
     # Get the weight only if there's a lamb in the image
-    weight = get_weight(mypath, ts) if id_crotal == "lamb" else None
+    weight = get_weight(mypath, ts) if id_crotal == "lamb" or not bool(np.random.randint(10)) else None
 
     filename = os.path.join(path_color, "{}_{}_{}.png".format(datetime.fromtimestamp(ts), cam, "color"))
 

@@ -46,13 +46,15 @@ def isThereALamb(color_image, depth_image, model):
         return True, "lamb"
     elif result_index == 1:
         print("\tThere's no lamb")
-        return not bool(np.random.randint(120)), "empty"
+        # return not bool(np.random.randint(120)), "empty"
+        return not bool(np.random.randint(60)), "empty"
     elif result_index == 2:
         print("\tThere's something (prob. a lamb in a wrong position)")
-        return not bool(np.random.randint(20)), "wrong"
+        # return not bool(np.random.randint(20)), "wrong"
+        return not bool(np.random.randint(10)), "wrong"
     elif result_index == 3:
         print("\tSomething is covering the camera")
-        return not bool(np.random.randint(1000)), "fly"
+        return not bool(np.random.randint(200)), "fly"
     else:
         print("[!] Impossible print. Something is wrong in isThereALamb()")
 
