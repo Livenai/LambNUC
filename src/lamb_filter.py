@@ -54,7 +54,7 @@ def isThereALamb(color_image, depth_image, model):
         return not bool(np.random.randint(10)), "wrong"
     elif result_index == 3:
         print("\tSomething is covering the camera")
-        return not bool(np.random.randint(200)), "fly"
+        return not bool(np.random.randint(10)), "fly"
     else:
         print("[!] Impossible print. Something is wrong in isThereALamb()")
 
