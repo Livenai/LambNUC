@@ -1,84 +1,65 @@
-import cv2
 import numpy as np
+import cv2
+import os
+from keras import models
 
-# TODO: load the NN model to predict 
 
-# zona de interes
-Yi = 146
-Xi = 52
-Hi = 161
-Wi = 538
-
-# porcentaje de reduccion del mapa de voxels
-voxel_scale_percent = 10
-
-# umbral de recuento de voxels
-voxel_threshold = 1150  # 1000 aprox.
-
-# establecemos los umbrales
-__top_threshold__ = 800
-__bottom_threshold__ = 430
-__under_bottom_threshold__ = 100
+def cropWithZeros(in_array, x, y, h, w):
+    """
+    Crop a given image and refill it with zeros to keep the same shape.
+    :param in_array: array with the image
+    :param x: starting coordinate x of the point for the interesed area
+    :param y: starting coordinate y of the point for the interesed area
+    :param h: height of the area
+    :param w: weidth of the area
+    :return numpy array with the result image
+    """
+    in_array = np.array(in_array)
+    shape = in_array.shape
+    crop = in_array[y:y + h, x:x + w]
+    bx = shape[0] - x - h
+    by = shape[1] - y - w
+    padding = ((x, bx), (y, by))
+    return np.pad(crop, padding)
 
 
 def isThereALamb(color_image, depth_image):
-	"""
-	Asks if the current image has a lamb in a right position
-	:param color_image: numpy array (640, 480, 3) shape RGB image.
-	:param depth_image: numpy array (640, 480, 1) shape Depth image.
-	:return: tuple(bool, string) the string shows more info about the image;
-		it might be there's a part of a lamb in the image (still False).
-	"""
-	depth_result = __isLamb__(depth_image)
-	print("\tNum Voxel:\t " + str(depth_result))
-	error_random = not bool(np.random.randint(150))
-	no_lamb_random = not bool(np.random.randint(80))
+    """
+    Asks if the current image has a lamb in a right position
+    :param color_image: numpy array (640, 480, 3) shape RGB image.
+    :param depth_image: numpy array (640, 480, 1) shape Depth image.
+    :return: tuple(bool, string) string with the predicted image's label;
+        it might be there's a part of a lamb in the image (still False).
+    """
+    parent_folder = os.path.abspath(os.path.dirname(__file__))
 
-	# TODO: call the NN function and pack the result with the same result we're currently using right here
+    path = os.path.join(parent_folder, "etc", "CNN_model.h5")  # ruta al archivo .h5 con la red
 
+    model = models.load_model(path)
 
-	# comprobamos el numero para determinar que se ha detectado
-	if __bottom_threshold__ <= depth_result < __top_threshold__:
-		print("\tThere's a lamb")
-		return True, "lamb"
-	elif depth_result < __under_bottom_threshold__:
-		print("\tThere's no lamb")
-		return no_lamb_random, "empty"
-	elif depth_result < __bottom_threshold__:
-		print("\tThere's something (prob. a lamb in a wrong position)")
-		return error_random, "wrong"
-	elif __top_threshold__ <= depth_result:
-		print("\tSomething is covering the camera")
-		return error_random, "fly"
-	else:
-		print("[!] Impossible print. Something is wrong in isThereALamb()")
+    # We only use the depth_image right now.
+    # crop
+    img = cropWithZeros(depth_image, 38, 102, 230, 503)
 
-	return True, "to_check"
+    # predict
+    img = np.array([img.reshape(480, 640, 1)])
+    res = model.predict(img, verbose=0, use_multiprocessing=True)
 
+    result_index = np.argmax(np.array(res))
 
-def __isLamb__(image):
-	"""
-	Función que recorta la imagen en la zona de interes (donde se debe de encontrar la lamb)
-	y reduce la imagen a un mapa de voxels. Estos voxels son la media aritmetica de
-	los pixeles que abarca.
-	La funcion devuelve el numero de voxels que superan el umbral de deteccion de lamb.
-	:param image: numpy array with (640x480x1) shape (in case of depth image, which is the case;
-	but it could be (640x480x3) of shape if we use a color image).
-	:return: int with the sumatory of the voxels which satisfied the detection condition.
-	"""
-	# recortamos en la zona de interes
-	image_crop = image[Yi:Yi + Hi, Xi:Xi + Wi]
+    if result_index == 0:
+        print("\tThere's a lamb")
+        return True, "lamb"
+    elif result_index == 1:
+        print("\tThere's no lamb")
+        return not bool(np.random.randint(120)), "empty"
+    elif result_index == 2:
+        print("\tThere's something (prob. a lamb in a wrong position)")
+        return not bool(np.random.randint(20)), "wrong"
+    elif result_index == 3:
+        print("\tSomething is covering the camera")
+        return not bool(np.random.randint(1000)), "fly"
+    else:
+        print("[!] Impossible print. Something is wrong in isThereALamb()")
 
-	# reducimos al mapa de voxels
-	width = int(image_crop.shape[1] * voxel_scale_percent / 100)
-	height = int(image_crop.shape[0] * voxel_scale_percent / 100)
-	dim = (width, height)
-	resized_image = cv2.resize(image_crop, dim, interpolation=cv2.INTER_LANCZOS4)
-
-	#return (resized_image <= voxel_threshold).sum()
-	return np.count_nonzero(resized_image <= voxel_threshold)
-	# # contamos los voxels que superan el umbral
-	# for fila in resized_image:
-	# 	for voxel in fila:
-	# 		if voxel <= voxel_threshold:
-	# 			result += 1
+    return True, "to_check"

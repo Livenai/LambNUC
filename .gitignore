@@ -24,3 +24,5 @@ etc/ngrok
 scratch/
 
 etc/weighing_url.txt
+
+CNN_model.h5
