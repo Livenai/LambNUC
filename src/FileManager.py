@@ -75,7 +75,7 @@ def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
     :param id_crotal: string with the info of the lamb which is in the image.
     :param cam: string with the info of the camera where the frames have been taken.
     """
-    today = date.today()
+    today = str(date.today())
     mypath = os.path.join(os.path.expanduser('~'), 'LambNN')
 
     def mkdirs(current_path, paths):
@@ -94,14 +94,15 @@ def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
         mkdirs(mypath, ("savings", "depth", id_crotal, today))
     ts = time.time()
     # Get the weight only if there's a lamb in the image
-    weight = get_weight(mypath, ts) if id_crotal == "lamb" or not bool(np.random.randint(10)) else None
+    weight = get_weight(mypath, ts) if id_crotal == "lamb" or not bool(np.random.randint(2)) else None
 
-    filename = os.path.join(path_color, "{}_{}_{}.png".format(datetime.fromtimestamp(ts), cam, "color"))
+    timestamp = str(datetime.fromtimestamp(ts)).replace(":", "-")
+    filename = os.path.join(path_color, "{}_{}_{}.png".format(timestamp, cam, "color"))
 
     # Load and update the json weights
     if weight is not None:
         w_id = str(os.path.basename(filename))[0:-15]
-        weight_path = os.path.join(mypath, "savings", today, ".json")
+        weight_path = os.path.join(mypath, "savings", str(today + "_.json"))
         # Get the dict of weights or make a new one
         if os.path.exists(weight_path):
             with open(weight_path, "r") as f:
