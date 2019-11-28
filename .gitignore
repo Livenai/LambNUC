@@ -18,3 +18,9 @@ PY2venv/
 etc/ngrok
 
 .vscode/
+
+.DS_Store
+
+scratch/
+
+etc/weighing_url.txt
