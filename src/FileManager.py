@@ -75,7 +75,7 @@ def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
     :param id_crotal: string with the info of the lamb which is in the image.
     :param cam: string with the info of the camera where the frames have been taken.
     """
-    today = time.today()
+    today = date.today()
     mypath = os.path.join(os.path.expanduser('~'), 'LambNN')
 
     def mkdirs(current_path, paths):
