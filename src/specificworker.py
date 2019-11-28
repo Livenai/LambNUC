@@ -26,12 +26,14 @@ from genericworker import *
 # import librobocomp_qmat
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
+import os
 from FileManager import save_frames, FileManager, get_saved_info
 from PySide2 import QtCore
 from rs_camera import RSCamera
 from lamb_filter import isThereALamb
 import signal
 from send_message import send_msg
+from keras import models
 
 
 class SpecificWorker(GenericWorker):
@@ -59,6 +61,12 @@ class SpecificWorker(GenericWorker):
 		self.frame = (None, None)
 
 		self.Application.start()
+
+		mypath = os.path.join(os.path.expanduser('~'), 'LambNN')
+
+		path = os.path.join(mypath, "etc", "CNN_model.h5")  # ruta al archivo .h5 con la red
+
+		self.CNNmodel = models.load_model(path)
 
 	def receive_signal(self, signum, stack):
 		print("\n\n\t[eCtrl + C]\n\n")
@@ -181,7 +189,7 @@ class SpecificWorker(GenericWorker):
 	def sm_processing_and_filter(self):
 		print("Entered state processing_and_filter")
 		self.no_cam = 0
-		isLamb, self.lamb_path = isThereALamb(*self.frame)
+		isLamb, self.lamb_path = isThereALamb(*self.frame, model=self.CNNmodel)
 		if isLamb or self.saver_timer.remainingTime() == 0:
 			self.t_processing_and_filter_to_save.emit()
 		else:

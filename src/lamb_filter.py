@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import os
-from keras import models
+
 
 
 def cropWithZeros(in_array, x, y, h, w):
@@ -23,7 +23,7 @@ def cropWithZeros(in_array, x, y, h, w):
     return np.pad(crop, padding)
 
 
-def isThereALamb(color_image, depth_image):
+def isThereALamb(color_image, depth_image, model):
     """
     Asks if the current image has a lamb in a right position
     :param color_image: numpy array (640, 480, 3) shape RGB image.
@@ -31,12 +31,6 @@ def isThereALamb(color_image, depth_image):
     :return: tuple(bool, string) string with the predicted image's label;
         it might be there's a part of a lamb in the image (still False).
     """
-    mypath = os.path.join(os.path.expanduser('~'), 'LambNN')
-
-    path = os.path.join(mypath, "etc", "CNN_model.h5")  # ruta al archivo .h5 con la red
-
-    model = models.load_model(path)
-
     # We only use the depth_image right now.
     # crop
     img = cropWithZeros(depth_image, 38, 102, 230, 503)
