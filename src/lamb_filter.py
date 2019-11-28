@@ -31,9 +31,9 @@ def isThereALamb(color_image, depth_image):
     :return: tuple(bool, string) string with the predicted image's label;
         it might be there's a part of a lamb in the image (still False).
     """
-    parent_folder = os.path.abspath(os.path.dirname(__file__))
+    mypath = os.path.join(os.path.expanduser('~'), 'LambNN')
 
-    path = os.path.join(parent_folder, "etc", "CNN_model.h5")  # ruta al archivo .h5 con la red
+    path = os.path.join(mypath, "etc", "CNN_model.h5")  # ruta al archivo .h5 con la red
 
     model = models.load_model(path)
 
