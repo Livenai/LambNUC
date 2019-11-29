@@ -6,6 +6,7 @@ from datetime import datetime, date
 import cv2
 import numpy as np
 
+
 class FileManager(Exception):
     pass
 
@@ -86,9 +87,10 @@ def save_frames(color_frame, depth_frame, id_crotal=None, cam="cam01"):
                 os.mkdir(path)
         return path
 
-    if id_crotal is None:
+    if id_crotal is None or id_crotal == "":
         path_color = mkdirs(mypath, ("savings", "color", today))
         mkdirs(mypath, ("savings", "depth", today))
+    # elif id_crotal in ("lamb", "wrong", "empty", "fly", "to_check"):
     else:
         path_color = mkdirs(mypath, ("savings", "color", id_crotal, today))
         mkdirs(mypath, ("savings", "depth", id_crotal, today))

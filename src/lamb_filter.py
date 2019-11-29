@@ -1,26 +1,33 @@
 import numpy as np
-import cv2
-import os
+
+MAX_WHITES_ALLOWED = 20000
 
 
-
-def cropWithZeros(in_array, x, y, h, w):
+def filter_flies(depth_image_cropped):
     """
-    Crop a given image and refill it with zeros to keep the same shape.
+    Filter the given cropped image if it has relevant information or it doesn't
+    :param depth_image_cropped: numpy array
+    :return: the image or None in case the image is not relevant
+    """
+    white_pixels = np.sum(depth_image_cropped == 0.0)
+    if white_pixels > MAX_WHITES_ALLOWED:
+        return None
+    else:
+        return depth_image_cropped
+
+
+def crop_image(in_array, x, y, h, w):
+    """
+    Crop a given image and return it with shape (h * w).
     :param in_array: array with the image
-    :param x: starting coordinate x of the point for the interesed area
-    :param y: starting coordinate y of the point for the interesed area
+    :param x: starting coordinate x of the point for the interested area
+    :param y: starting coordinate y of the point for the interested area
     :param h: height of the area
-    :param w: weidth of the area
+    :param w: width of the area
     :return numpy array with the result image
     """
     in_array = np.array(in_array)
-    shape = in_array.shape
-    crop = in_array[y:y + h, x:x + w]
-    bx = shape[0] - x - h
-    by = shape[1] - y - w
-    padding = ((x, bx), (y, by))
-    return np.pad(crop, padding)
+    return in_array[y:y + h, x:x + w]
 
 
 def isThereALamb(color_image, depth_image, model):
@@ -33,29 +40,37 @@ def isThereALamb(color_image, depth_image, model):
     """
     # We only use the depth_image right now.
     # crop
-    img = cropWithZeros(depth_image, 38, 102, 230, 503)
+    img = crop_image(depth_image, 38, 102, 230, 503)
+    img = filter_flies(depth_image_cropped=img)
 
-    # predict
-    img = np.array([img.reshape(480, 640, 1)])
-    res = model.predict(img, verbose=0, use_multiprocessing=True)
+    if img is not None:
 
-    result_index = np.argmax(np.array(res))
+        # predict
+        img = np.array([img.reshape(480, 640, 1)])
+        res = model.predict(img, verbose=0, use_multiprocessing=True)
 
-    if result_index == 0:
-        print("\tThere's a lamb")
-        return True, "lamb"
-    elif result_index == 1:
-        print("\tThere's no lamb")
-        # return not bool(np.random.randint(120)), "empty"
-        return not bool(np.random.randint(60)), "empty"
-    elif result_index == 2:
-        print("\tThere's something (prob. a lamb in a wrong position)")
-        # return not bool(np.random.randint(20)), "wrong"
-        return not bool(np.random.randint(10)), "wrong"
-    elif result_index == 3:
-        print("\tSomething is covering the camera")
-        return not bool(np.random.randint(5)), "fly"
+        result_index = np.argmax(np.array(res))
+
+        # TODO: the new predict will return a different set; not a 4 lenght array (it will be a 3-lenght arr.)
+        if result_index == 0:
+            print("\t CNN msg: There's a lamb. \t label:lamb")
+            return True, "lamb"
+        elif result_index == 1:
+            print("\t CNN msg: There's no lamb. \t label:empty")
+            # return not bool(np.random.randint(120)), "empty"
+            return not bool(np.random.randint(60)), "empty"
+        elif result_index == 2:
+            print("\t CNN msg: There's prob. a lamb in a wrong position: \t label:wrong")
+            # return not bool(np.random.randint(20)), "wrong"
+            return not bool(np.random.randint(10)), "wrong"
+        elif result_index == 3:
+            print("\t CNN msg: Something is covering the camera. \t label:fly")
+            # return not bool(np.random.randint(5)), "fly"
+            return False, "fly"
+        else:
+            print("[!] Impossible print. Something is wrong in isThereALamb()")
+
+        return True, "to_check"
     else:
-        print("[!] Impossible print. Something is wrong in isThereALamb()")
-
-    return True, "to_check"
+        print("\t Alghtm msg: Flies detected!! \t-->\t label:fly")
+        return False, "fly"
