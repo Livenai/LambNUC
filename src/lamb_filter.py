@@ -51,7 +51,6 @@ def isThereALamb(color_image, depth_image, model):
 
         result_index = np.argmax(np.array(res))
 
-        # TODO: the new predict will return a different set; not a 4 lenght array (it will be a 3-lenght arr.)
         if result_index == 0:
             print("\t CNN msg: There's a lamb. \t label:lamb")
             return True, "lamb"
@@ -63,10 +62,6 @@ def isThereALamb(color_image, depth_image, model):
             print("\t CNN msg: There's prob. a lamb in a wrong position: \t label:wrong")
             # return not bool(np.random.randint(20)), "wrong"
             return not bool(np.random.randint(10)), "wrong"
-        elif result_index == 3:
-            print("\t CNN msg: Something is covering the camera. \t label:fly")
-            # return not bool(np.random.randint(5)), "fly"
-            return False, "fly"
         else:
             print("[!] Impossible print. Something is wrong in isThereALamb()")
 
