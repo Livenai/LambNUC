@@ -40,13 +40,13 @@ def isThereALamb(color_image, depth_image, model):
     """
     # We only use the depth_image right now.
     # crop
-    img = crop_image(depth_image, 38, 102, 230, 503)
+    img = crop_image(depth_image, 38, 102, 230, 510)
     img = filter_flies(depth_image_cropped=img)
 
     if img is not None:
 
         # predict
-        img = np.array([img.reshape(480, 640, 1)])
+        img = np.array([img.reshape(230, 510, 1)])
         res = model.predict(img, verbose=0, use_multiprocessing=True)
 
         result_index = np.argmax(np.array(res))
