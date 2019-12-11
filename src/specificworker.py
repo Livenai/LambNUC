@@ -32,7 +32,7 @@ from PySide2 import QtCore
 from rs_camera import RSCamera
 from lamb_filter import isThereALamb
 import signal
-from send_message import send_msg
+from telebot_messages import send_msg
 from keras import models
 
 
