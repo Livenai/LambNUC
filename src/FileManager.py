@@ -6,7 +6,7 @@ from datetime import datetime, date
 import cv2
 from json import dumps
 from subprocess import check_output
-
+import numpy as np
 
 class FileManager(Exception):
     pass
@@ -72,12 +72,6 @@ def get_weight():
         # We do a comparison in order to get a coherent weight for this current time.
         if 0 <= abs(current_ts - ts) <= 3:
             weight = float(webdata["current_weight"]["value"])
-
-        # Let's ignore the "valid_ts" by the moment.
-        # if 0 <= abs(valid_ts - ts) <= 1:
-        #     weight = float(webdata["valid_weight"]["value"])
-        # elif 0 <= abs(valid_ts - ts) <= 2:
-        #     weight = float(webdata["current_weight"]["value"])
         else:
             print("\nThe weights taken by the json are too far from the current time\n")
             # There's a problem: don't save...?
@@ -104,17 +98,20 @@ def mkdirs(current_path, paths):
 
 def save_weights(weights):
     """
-
-    :param weights:
-    :return:
+    It updates the json file with the mean of the weights buffered
+    :param weights: dictionary with the id's and weights
     """
     # Get the dict of weights or make a new one
     weight_path = os.path.join(parent_folder, "savings", str(str(date.today()) + "_.json"))
+    result_weight = []
     if bool(weights) and os.path.exists(weight_path):
         with open(weight_path, "r") as f:
             data_weight = json.load(f)
-        for w_id, weight in weights.items():
-            data_weight[w_id]["weight"] = weight
+        for w_id, values in weights.items():
+            result_weight.append(values["weight"])
+        result_weight = float(np.quantile(result_weight.sort(), 0.75))
+        for w_id, values in weights.items():
+            data_weight[w_id]["weight"] = result_weight
     else:
         data_weight = {}
 
@@ -185,7 +182,7 @@ def save_frames(color_frame, depth_frame, lamb_label=None, cam="cam01"):
     else:
         raise FileManager("filename incorrect!!")
     w_id = str(os.path.basename(filename))[0:-15]
-    return w_id, filename
+    return w_id, filename, ts
 
 
 def save_info(color_frame, depth_frame, lamb_label=None, cam="cam01"):
@@ -198,10 +195,9 @@ def save_info(color_frame, depth_frame, lamb_label=None, cam="cam01"):
     :param cam: string with the info of the camera where the frames have been taken.
     :return w_id: string with the identifier of the frames
     """
-    w_id, depth_filename = save_frames(color_frame, depth_frame, lamb_label, cam)
-    today = str(date.today())
+    w_id, depth_filename, ts = save_frames(color_frame, depth_frame, lamb_label, cam)
     save_json(w_id, depth_filename, lamb_label)
-    return w_id
+    return w_id, ts
 
 
 def __is_new_file_correct__(file):
