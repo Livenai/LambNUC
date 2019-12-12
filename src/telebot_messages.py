@@ -5,6 +5,7 @@ from telepot.loop import MessageLoop
 import os
 import time
 from FileManager import get_saved_info
+from threading import currentThread
 
 
 def send_msg(text: str):
@@ -31,23 +32,23 @@ def send_msg(text: str):
         print("\n\n!!!!!!!!!!!!!!   Error al enviar el mensaje   !!!!!!!!!!!!!!\n")
 
 
-def on_chat_message(msg):
-    content_type, chat_type, chat_id = telepot.glance(msg)
-    if content_type == "text":
-        text = msg["text"]
-        if text == "/status":
-            my_bot.sendMessage(chat_id=chat_id, text=str(get_saved_info()))
-        elif "/" in text:
-            my_bot.sendMessage(chat_id=chat_id, text="There's nothing to do here... ")
-
-
-if __name__ == '__main__':
+def start_bot():
+    t = currentThread()
     with open(os.path.join(os.path.expanduser("~"), "LambNN", "etc", "telegram_token.txt"), "r") as f:
         my_token = f.readline()[:-1]
     my_bot = telepot.Bot(my_token)
 
+    def on_chat_message(msg):
+        content_type, chat_type, chat_id = telepot.glance(msg)
+        if content_type == "text":
+            text = msg["text"]
+            if text == "/status":
+                my_bot.sendMessage(chat_id=chat_id, text=str(get_saved_info()))
+            elif "/" in text:
+                my_bot.sendMessage(chat_id=chat_id, text="There's nothing to do here... ")
+
     MessageLoop(my_bot, {'chat': on_chat_message}).run_as_thread()
     print('Listening ...')
 
-    while 1:
+    while getattr(t, "do_run", True):
         time.sleep(10)

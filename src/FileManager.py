@@ -12,6 +12,9 @@ class FileManager(Exception):
     pass
 
 
+parent_folder = os.path.join(os.path.expanduser('~'), 'LambNN')
+
+
 def get_saved_info():
     """
     Asks to the system for the number of saved images, their labels, and the current available space in the disk
@@ -37,9 +40,9 @@ def get_saved_info():
 
     # paths to check the space
     paths = (os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "lamb"),
-             os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "no_lamb"),
-             os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "error"))
-    info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "error": make_info(paths[2])}
+             os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "empty"),
+             os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "wrong"))
+    info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "wrong": make_info(paths[2])}
 
     # Ask to the (Linux) system and process the output
     space_available = str(check_output(['df', '-H', '/dev/sda2']), encoding="latin1").replace("Tama\u00c3\u00b1o",
@@ -50,16 +53,15 @@ def get_saved_info():
     return result
 
 
-def get_weight(path, ts):
+def get_weight():
     """
     Gets the current weight from the weighting machine where the lambs are placed
-    :param path: parent folder of the file with url where the weighting machine uploads the info
-    :param ts: current timestamp (it was calculated before, to keep the same value)
     :return float weight: the weight of the lamb
         or None: in case there's too much difference of time from the image taken and the url time
     """
+    ts = time.time()
     # get the url
-    with open(os.path.join(path, "etc", "weighing_url.txt"), "r") as f:
+    with open(os.path.join(os.path.expanduser("~"), "LambNN", "etc", "weighing_url.txt"), "r") as f:
         url = f.readline().replace("\n", "")
     try:
         json_url = request.urlopen(url)
@@ -100,46 +102,74 @@ def mkdirs(current_path, paths):
     return mkdirs(current_path, paths[1:]) if len(paths) > 1 else current_path
 
 
-def save_info(color_frame, depth_frame, id_crotal=None, cam="cam01"):
+def save_weights(weights):
+    """
+
+    :param weights:
+    :return:
+    """
+    # Get the dict of weights or make a new one
+    weight_path = os.path.join(parent_folder, "savings", str(str(date.today()) + "_.json"))
+    if bool(weights) and os.path.exists(weight_path):
+        with open(weight_path, "r") as f:
+            data_weight = json.load(f)
+        for w_id, weight in weights.items():
+            data_weight[w_id]["weight"] = weight
+    else:
+        data_weight = {}
+
+    # Save the weight of the new lamb image
+    with open(weight_path, "w") as f:
+        f.write(json.dumps(data_weight, sort_keys=True, indent=4))
+
+
+def save_json(w_id, depth_filename, lamb_label):
+    """
+    It saves the json file with info of the images
+    :param w_id: string identifier of the image
+    :param depth_filename: string with the full path of the depth file
+    :param lamb_label: string with the label of the lamb image (lamb, empty or wrong)
+    """
+    # Load and update the json
+    weight_path = os.path.join(parent_folder, "savings", str(str(date.today()) + "_.json"))
+    if os.path.exists(weight_path):
+        with open(weight_path, "r") as f:
+            data_weight = json.load(f)
+    else:
+        data_weight = {}
+
+    data_path = depth_filename.replace(str(os.path.join(os.path.join(os.path.expanduser("~"), "LambNN"))), "")
+    data_weight[w_id] = {"path_depth": data_path, "path_color": data_path.replace("depth", "color"),
+                         "label": lamb_label, "weight": None}
+
+    # Save the weight of the new lamb image
+    with open(weight_path, "w") as f:
+        f.write(json.dumps(data_weight, sort_keys=True, indent=4))
+
+
+def save_frames(color_frame, depth_frame, lamb_label=None, cam="cam01"):
     """
     It saves the current frame to a file for each type of frame (2: color and depth)
     it also creates the folders needed to the specified path of the files.
     :param color_frame: numpy array with (640x480x3) of shape, the color image.
     :param depth_frame: numpy array with (640x480x1) of shape, the depth image.
-    :param id_crotal: string with the info of the lamb which is in the image.
+    :param lamb_label: string with info of the lamb which is in the image.
     :param cam: string with the info of the camera where the frames have been taken.
+    :return tuple(w_id, filename): string with the id of the frames (for the json file),
+        and the depth full filename with its path
     """
     today = str(date.today())
-    my_path = os.path.join(os.path.expanduser('~'), 'LambNN')
 
-    if id_crotal is None or id_crotal == "":
-        path_color = mkdirs(my_path, ("savings", "color", today))
-        mkdirs(my_path, ("savings", "depth", today))
+    if lamb_label is None or lamb_label == "":
+        path_color = mkdirs(parent_folder, ("savings", "color", today))
+        mkdirs(parent_folder, ("savings", "depth", today))
     else:
-        path_color = mkdirs(my_path, ("savings", "color", id_crotal, today))
-        mkdirs(my_path, ("savings", "depth", id_crotal, today))
+        path_color = mkdirs(parent_folder, ("savings", "color", lamb_label, today))
+        mkdirs(parent_folder, ("savings", "depth", lamb_label, today))
     ts = time.time()
-
-    # Get the weight
-    weight = get_weight(my_path, ts)  # if id_crotal == "lamb" or not bool(np.random.randint(2)) else None
 
     timestamp = str(datetime.fromtimestamp(ts)).replace(":", "-")
     filename = os.path.join(path_color, "{}_{}_{}.png".format(timestamp, cam, "color"))
-
-    # Load and update the json weights
-    if weight is not None:
-        w_id = str(os.path.basename(filename))[0:-15]
-        weight_path = os.path.join(my_path, "savings", str(today + "_.json"))
-        # Get the dict of weights or make a new one
-        if os.path.exists(weight_path):
-            with open(weight_path, "r") as f:
-                data_weight = json.load(f)
-        else:
-            data_weight = {}
-        data_weight[w_id] = weight
-        # Save the weight of the new lamb image
-        with open(weight_path, "w") as f:
-            f.write(json.dumps(data_weight, sort_keys=True, indent=4))
 
     # Save frames
     correct, filename = __is_new_file_correct__(filename)
@@ -154,6 +184,24 @@ def save_info(color_frame, depth_frame, id_crotal=None, cam="cam01"):
         cv2.imwrite(filename=filename, img=depth_frame)
     else:
         raise FileManager("filename incorrect!!")
+    w_id = str(os.path.basename(filename))[0:-15]
+    return w_id, filename
+
+
+def save_info(color_frame, depth_frame, lamb_label=None, cam="cam01"):
+    """
+    It saves the frame as image files (color and depth), creates the folders requested to the files,
+    and updates a json file with info of the frames for each day.
+    :param color_frame: numpy array with (640x480x3) of shape, the color image.
+    :param depth_frame: numpy array with (640x480x1) of shape, the depth image.
+    :param lamb_label: string with info of the lamb which is in the image.
+    :param cam: string with the info of the camera where the frames have been taken.
+    :return w_id: string with the identifier of the frames
+    """
+    w_id, depth_filename = save_frames(color_frame, depth_frame, lamb_label, cam)
+    today = str(date.today())
+    save_json(w_id, depth_filename, lamb_label)
+    return w_id
 
 
 def __is_new_file_correct__(file):
