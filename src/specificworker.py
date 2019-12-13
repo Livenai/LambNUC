@@ -27,7 +27,7 @@ from genericworker import *
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
 import os
-from FileManager import save_info, save_weights, FileManager, get_saved_info, get_weight
+from FileManager import save_info, FileManager, get_saved_info
 from PySide2 import QtCore
 from rs_camera import RSCamera
 from lamb_filter import isThereALamb
@@ -35,8 +35,6 @@ import signal
 from telebot_messages import send_msg, start_bot
 from keras import models
 from threading import Thread
-from collections import OrderedDict
-
 
 class SpecificWorker(GenericWorker):
     def __init__(self, proxy_map):
@@ -62,7 +60,6 @@ class SpecificWorker(GenericWorker):
         self.telegram_bot.start()
 
         self.Application.start()
-        self.lamb_weights = OrderedDict()
 
         # Load the CNN model with the path to the .h5 model path
         self.CNNmodel = models.load_model(os.path.join(os.path.expanduser('~'), 'LambNN', "etc", "CNN_model.h5"))
@@ -201,17 +198,7 @@ class SpecificWorker(GenericWorker):
     def sm_save(self):
         print("Entered state save")
         try:
-            w_id, ts = save_info(*self.frame, id_crotal=self.lamb_label)
-            if self.lamb_label == "lamb":
-                self.lamb_weights[w_id] = {"weight": get_weight(), "ts": ts}
-                weights_list = list(self.lamb_weights.items())
-                first_ts = weights_list[0][1]["ts"]
-                if abs(first_ts - ts) > 12:
-                    save_weights(self.lamb_weights)
-                    self.lamb_weights = OrderedDict()
-            elif bool(self.lamb_weights):
-                save_weights(self.lamb_weights)
-                self.lamb_weights = OrderedDict()
+            save_info(*self.frame, lamb_label=self.lamb_label)
             self.lamb_label = ""
             self.t_save_to_get_frames.emit()
         except FileManager as e:

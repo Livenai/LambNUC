@@ -12,11 +12,11 @@ def server():
     Handler = http.server.SimpleHTTPRequestHandler
 
     with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        print("serving at port", PORT)
+        print("Serving at port", PORT)
         httpd.serve_forever()
 
 def updating():
-    print("updating html")
+    print("Started html updater")
     path = os.path.join(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__)))), "index.html")
     print(path)
     while True:
@@ -24,8 +24,7 @@ def updating():
         file = {"time": ts, "current_weight": {"time": ts, "value": float(4.1*np.random.random_sample())}, "valid_weight": {"time": ts, "value": float(6.7*np.random.random_sample())}}
         with open(path, "w") as f:
             f.write(dumps(file, indent=4))
-        print("updated")
-        time.sleep(6)
+        time.sleep(2)
         
 t_server = Thread(target=server)
 t_updating = Thread(target=updating)

@@ -8,6 +8,7 @@ from json import dumps
 from subprocess import check_output
 import numpy as np
 
+
 class FileManager(Exception):
     pass
 
@@ -39,9 +40,9 @@ def get_saved_info():
         return info
 
     # paths to check the space
-    paths = (os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "lamb"),
-             os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "empty"),
-             os.path.join(os.path.expanduser("~"), "LambNN", "savings", "color", "wrong"))
+    paths = (os.path.join(parent_folder, "savings", "color", "lamb"),
+             os.path.join(parent_folder, "savings", "color", "empty"),
+             os.path.join(parent_folder, "savings", "color", "wrong"))
     info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "wrong": make_info(paths[2])}
 
     # Ask to the (Linux) system and process the output
@@ -61,7 +62,7 @@ def get_weight():
     """
     ts = time.time()
     # get the url
-    with open(os.path.join(os.path.expanduser("~"), "LambNN", "etc", "weighing_url.txt"), "r") as f:
+    with open(os.path.join(parent_folder, "etc", "weighing_url.txt"), "r") as f:
         url = f.readline().replace("\n", "")
     try:
         json_url = request.urlopen(url)
@@ -96,30 +97,6 @@ def mkdirs(current_path, paths):
     return mkdirs(current_path, paths[1:]) if len(paths) > 1 else current_path
 
 
-def save_weights(weights):
-    """
-    It updates the json file with the mean of the weights buffered
-    :param weights: dictionary with the id's and weights
-    """
-    # Get the dict of weights or make a new one
-    weight_path = os.path.join(parent_folder, "savings", str(str(date.today()) + "_.json"))
-    result_weight = []
-    if bool(weights) and os.path.exists(weight_path):
-        with open(weight_path, "r") as f:
-            data_weight = json.load(f)
-        for w_id, values in weights.items():
-            result_weight.append(values["weight"])
-        result_weight = float(np.quantile(result_weight.sort(), 0.75))
-        for w_id, values in weights.items():
-            data_weight[w_id]["weight"] = result_weight
-    else:
-        data_weight = {}
-
-    # Save the weight of the new lamb image
-    with open(weight_path, "w") as f:
-        f.write(json.dumps(data_weight, sort_keys=True, indent=4))
-
-
 def save_json(w_id, depth_filename, lamb_label):
     """
     It saves the json file with info of the images
@@ -135,9 +112,9 @@ def save_json(w_id, depth_filename, lamb_label):
     else:
         data_weight = {}
 
-    data_path = depth_filename.replace(str(os.path.join(os.path.join(os.path.expanduser("~"), "LambNN"))), "")
+    data_path = depth_filename.replace(str(parent_folder), "")
     data_weight[w_id] = {"path_depth": data_path, "path_color": data_path.replace("depth", "color"),
-                         "label": lamb_label, "weight": None}
+                         "label": lamb_label, "weight": float(get_weight())}
 
     # Save the weight of the new lamb image
     with open(weight_path, "w") as f:
@@ -197,7 +174,6 @@ def save_info(color_frame, depth_frame, lamb_label=None, cam="cam01"):
     """
     w_id, depth_filename, ts = save_frames(color_frame, depth_frame, lamb_label, cam)
     save_json(w_id, depth_filename, lamb_label)
-    return w_id, ts
 
 
 def __is_new_file_correct__(file):

@@ -26,3 +26,4 @@ scratch/
 etc/weighing_url.txt
 
 CNN_model.h5
+etc/mock/
