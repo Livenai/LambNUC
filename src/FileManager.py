@@ -71,7 +71,7 @@ def get_weight():
         # valid_ts = int(webdata["valid_weight"]["time"])
         current_ts = int(webdata["current_weight"]["time"])
         # We do a comparison in order to get a coherent weight for this current time.
-        if 0 <= abs(current_ts - ts) <= 3:
+        if 0 <= abs(current_ts - ts) <= 4:
             weight = float(webdata["current_weight"]["value"])
         else:
             print("\nThe weights taken by the json are too far from the current time\n")
@@ -97,7 +97,7 @@ def mkdirs(current_path, paths):
     return mkdirs(current_path, paths[1:]) if len(paths) > 1 else current_path
 
 
-def save_json(w_id, depth_filename, lamb_label):
+def save_json(w_id, depth_filename, lamb_label, weight):
     """
     It saves the json file with info of the images
     :param w_id: string identifier of the image
@@ -114,7 +114,7 @@ def save_json(w_id, depth_filename, lamb_label):
 
     data_path = depth_filename.replace(str(parent_folder), "")
     data_weight[w_id] = {"path_depth": data_path, "path_color": data_path.replace("depth", "color"),
-                         "label": lamb_label, "weight": float(get_weight())}
+                         "label": lamb_label, "weight": weight}
 
     # Save the weight of the new lamb image
     with open(weight_path, "w") as f:
@@ -162,7 +162,7 @@ def save_frames(color_frame, depth_frame, lamb_label=None, cam="cam01"):
     return w_id, filename, ts
 
 
-def save_info(color_frame, depth_frame, lamb_label=None, cam="cam01"):
+def save_info(color_frame, depth_frame, weight, lamb_label=None, cam="cam01"):
     """
     It saves the frame as image files (color and depth), creates the folders requested to the files,
     and updates a json file with info of the frames for each day.
@@ -173,7 +173,7 @@ def save_info(color_frame, depth_frame, lamb_label=None, cam="cam01"):
     :return w_id: string with the identifier of the frames
     """
     w_id, depth_filename, ts = save_frames(color_frame, depth_frame, lamb_label, cam)
-    save_json(w_id, depth_filename, lamb_label)
+    save_json(w_id, depth_filename, lamb_label, weight)
 
 
 def __is_new_file_correct__(file):

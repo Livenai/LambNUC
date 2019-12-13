@@ -27,7 +27,7 @@ from genericworker import *
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
 import os
-from FileManager import save_info, FileManager, get_saved_info
+from FileManager import save_info, FileManager, get_saved_info, get_weight
 from PySide2 import QtCore
 from rs_camera import RSCamera
 from lamb_filter import isThereALamb
@@ -35,6 +35,7 @@ import signal
 from telebot_messages import send_msg, start_bot
 from keras import models
 from threading import Thread
+
 
 class SpecificWorker(GenericWorker):
     def __init__(self, proxy_map):
@@ -55,6 +56,7 @@ class SpecificWorker(GenericWorker):
         self.camera = None
         self.lamb_label = ""
         self.frame = (None, None)
+        self.weight = 0.0
 
         self.telegram_bot = Thread(target=start_bot)
         self.telegram_bot.start()
@@ -146,6 +148,7 @@ class SpecificWorker(GenericWorker):
             self.frame = self.camera.get_frame()
             while self.timer.remainingTime() > 0:
                 self.frame = self.camera.get_frame()
+            self.weight = get_weight()
             self.t_get_frames_to_processing_and_filter.emit()
         except Exception as e:
             print("An error occur when taking a new frame,:\n " + str(e))
@@ -198,8 +201,9 @@ class SpecificWorker(GenericWorker):
     def sm_save(self):
         print("Entered state save")
         try:
-            save_info(*self.frame, lamb_label=self.lamb_label)
+            save_info(*self.frame, weight=self.weight, lamb_label=self.lamb_label)
             self.lamb_label = ""
+            self.weight = 0.0
             self.t_save_to_get_frames.emit()
         except FileManager as e:
             print(("Problem saving the file\n", e))
