@@ -35,12 +35,20 @@ def send_msg(text: str):
 
 def start_bot():
     t = currentThread()
+    parent_folder = os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
     with open(os.path.join(os.path.expanduser("~"), "LambNN", "etc", "telegram_token.txt"), "r") as f:
         my_token = f.readline()[:-1]
     my_bot = telepot.Bot(my_token)
 
     def on_chat_message(msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
+
+        pass_file = open(os.path.join(parent_folder, "etc", "sys_pass.txt"), "r")
+        sys_pass = pass_file.readline()
+        print(sys_pass)
+        pass_file.close()
+        sudo = "echo \"" + sys_pass + "\" | sudo -S " # es importante que haya un espacio despues de -S
         if content_type == "text":
             text = msg["text"]
             if text == "/restart_nuc":
@@ -71,6 +79,7 @@ def start_bot():
                 
             else:
                 my_bot.sendMessage(chat_id=chat_id, text="/restart_nuc\n/start_ngrok\n/stop_ngrok\n/status")
+
 
 
     MessageLoop(my_bot, {'chat': on_chat_message}).run_as_thread()
