@@ -42,10 +42,19 @@ def start_bot():
         content_type, chat_type, chat_id = telepot.glance(msg)
         if content_type == "text":
             text = msg["text"]
+            if text == "/restart_nuc":
+                pass
+            if text == "/start_ngrok":
+                pass
+            if text == "/stop_ngrok":
+                pass
             if text == "/status":
                 my_bot.sendMessage(chat_id=chat_id, text=str(get_saved_info()))
             elif "/" in text:
                 my_bot.sendMessage(chat_id=chat_id, text="There's nothing to do here... ")
+            else:
+                my_bot.sendMessage(chat_id=chat_id, text="/restart_nuc\n/start_ngrok\n/stop_ngrok\n/status")
+
 
     MessageLoop(my_bot, {'chat': on_chat_message}).run_as_thread()
     print('Listening ...')
