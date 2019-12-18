@@ -6,6 +6,7 @@ import os
 import time
 from FileManager import get_saved_info
 from threading import currentThread
+from emoji import emojize
 
 
 def send_msg(text: str):
@@ -43,12 +44,17 @@ def start_bot():
         if content_type == "text":
             text = msg["text"]
             if text == "/restart_nuc":
-                pass
-            if text == "/start_ngrok":
-                pass
-            if text == "/stop_ngrok":
-                pass
-            if text == "/status":
+                my_bot.sendMessage(chat_id=chat_id, text="Restarting NUC...")
+                os.system("shutdown /r /t 1")
+            elif text == "/start_ngrok":
+                my_bot.sendMessage(chat_id=chat_id, text="Starting Ngrok service...")
+
+                my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
+            elif text == "/stop_ngrok":
+                my_bot.sendMessage(chat_id=chat_id, text="Stopping Ngrok service...")
+
+                my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
+            elif text == "/status":
                 my_bot.sendMessage(chat_id=chat_id, text=str(get_saved_info()))
             elif "/" in text:
                 my_bot.sendMessage(chat_id=chat_id, text="There's nothing to do here... ")
