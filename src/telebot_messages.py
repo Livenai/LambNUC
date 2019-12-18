@@ -45,7 +45,7 @@ def start_bot():
             text = msg["text"]
             if text == "/restart_nuc":
                 my_bot.sendMessage(chat_id=chat_id, text="Restarting NUC...")
-                os.system("shutdown /r /t 1")
+                os.system("shutdown -r 0")
             elif text == "/start_ngrok":
                 my_bot.sendMessage(chat_id=chat_id, text="Starting Ngrok service...")
 
