@@ -45,19 +45,30 @@ def start_bot():
             text = msg["text"]
             if text == "/restart_nuc":
                 my_bot.sendMessage(chat_id=chat_id, text="Restarting NUC...")
-                os.system("shutdown -r 0")
+                os.system(sudo + "shutdown -r 0")
+
             elif text == "/start_ngrok":
                 my_bot.sendMessage(chat_id=chat_id, text="Starting Ngrok service...")
+                ret = os.system(sudo + "service lambsm start")
+                if ret == 0:
+                    my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
+                else:
+                    my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_down:'))
 
-                my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
             elif text == "/stop_ngrok":
                 my_bot.sendMessage(chat_id=chat_id, text="Stopping Ngrok service...")
+                ret = os.system(sudo + "service lambsm stop")
+                if ret == 0:
+                    my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
+                else:
+                    my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_down:'))
 
-                my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
             elif text == "/status":
                 my_bot.sendMessage(chat_id=chat_id, text=str(get_saved_info()))
+
             elif "/" in text:
                 my_bot.sendMessage(chat_id=chat_id, text="There's nothing to do here... ")
+                
             else:
                 my_bot.sendMessage(chat_id=chat_id, text="/restart_nuc\n/start_ngrok\n/stop_ngrok\n/status")
 
