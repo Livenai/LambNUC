@@ -57,7 +57,7 @@ def start_bot():
 
             elif text == "/start_ngrok":
                 my_bot.sendMessage(chat_id=chat_id, text="Starting Ngrok service...")
-                ret = os.system(sudo + "service lambsm start")
+                ret = os.system(sudo + "service server_ngrok start")
                 if ret == 0:
                     my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
                 else:
@@ -65,7 +65,7 @@ def start_bot():
 
             elif text == "/stop_ngrok":
                 my_bot.sendMessage(chat_id=chat_id, text="Stopping Ngrok service...")
-                ret = os.system(sudo + "service lambsm stop")
+                ret = os.system(sudo + "service server_ngrok stop")
                 if ret == 0:
                     my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
                 else:
