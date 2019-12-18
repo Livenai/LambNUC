@@ -90,6 +90,7 @@ class SpecificWorker(GenericWorker):
     def sm_init(self):
         """ First state of the state machine, it triggers the LambScan main state """
         print("Entered state init")
+        send_msg("LambNN started")
         signal.signal(signal.SIGINT, self.receive_signal)
         self.t_init_to_lambscan.emit()
 
@@ -120,7 +121,6 @@ class SpecificWorker(GenericWorker):
     def sm_start_streams(self):
         print("Entered state start_streams")
         try:
-            send_msg("LambNN started")
             self.camera = RSCamera()
             if self.camera.start():
                 self.info_timer.start()

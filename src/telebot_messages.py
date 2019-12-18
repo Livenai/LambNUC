@@ -61,7 +61,7 @@ def start_bot():
                 if ret == 0:
                     my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
                 else:
-                    my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_down:'))
+                    my_bot.sendMessage(chat_id=chat_id, text='fail')
 
             elif text == "/stop_ngrok":
                 my_bot.sendMessage(chat_id=chat_id, text="Stopping Ngrok service...")
@@ -69,7 +69,7 @@ def start_bot():
                 if ret == 0:
                     my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_up:'))
                 else:
-                    my_bot.sendMessage(chat_id=chat_id, text=emojize(':thumbs_down:'))
+                    my_bot.sendMessage(chat_id=chat_id, text='fail')
 
             elif text == "/status":
                 my_bot.sendMessage(chat_id=chat_id, text=str(get_saved_info()))
