@@ -101,7 +101,7 @@ def start_bot():
                     my_bot.sendMessage(chat_id=chat_id, text="/status")
 
             if no_rights:
-                my_bot.sendMessage(chat_id=chat_id, text="You don't have permission to run this command. " + emojize(':triumph:'))
+                my_bot.sendMessage(chat_id=chat_id, text="You don't have permission to run this command. \U0001F624")
 
     MessageLoop(my_bot, {'chat': on_chat_message}).run_as_thread()
     print('Listening ...')
