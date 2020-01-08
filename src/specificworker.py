@@ -27,7 +27,7 @@ from genericworker import *
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
 import os
-from FileManager import save_info, FileManager, get_saved_info, get_weight
+from FileManager import save_info, FileManager, get_saved_info, url, get_weight
 from PySide2 import QtCore
 from rs_camera import RSCamera
 from lamb_filter import isThereALamb
@@ -149,6 +149,8 @@ class SpecificWorker(GenericWorker):
             while self.timer.remainingTime() > 0:
                 self.frame = self.camera.get_frame()
             self.weight = get_weight()
+            if self.weight is None:
+                send_msg("Problem getting the json file from the weighing machine's url: {}".format(url))
             self.t_get_frames_to_processing_and_filter.emit()
         except Exception as e:
             print("An error occur when taking a new frame,:\n " + str(e))

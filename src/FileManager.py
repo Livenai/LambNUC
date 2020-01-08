@@ -15,6 +15,9 @@ class FileManager(Exception):
 
 parent_folder = os.path.join(os.path.expanduser('~'), 'LambNN')
 
+# Get the url
+with open(os.path.join(parent_folder, "etc", "weighing_url.txt"), "r") as f:
+    url = f.readline().replace("\n", "")
 
 def get_saved_info():
     """
@@ -61,9 +64,6 @@ def get_weight():
         or None: in case there's too much difference of time from the image taken and the url time
     """
     ts = time.time()
-    # get the url
-    with open(os.path.join(parent_folder, "etc", "weighing_url.txt"), "r") as f:
-        url = f.readline().replace("\n", "")
     try:
         json_url = request.urlopen(url)
         # Get the weight json info
