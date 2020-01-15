@@ -29,7 +29,7 @@ from genericworker import *
 import os
 from FileManager import save_info, FileManager, get_saved_info, url, get_weight
 from PySide2 import QtCore
-from rs_camera import RSCamera
+from rs_camera import RSCameras
 from lamb_filter import isThereALamb
 import signal
 from telebot_messages import send_msg, start_bot
@@ -53,7 +53,9 @@ class SpecificWorker(GenericWorker):
         self.info_timer.setInterval(self.Info_period)
         self.info_timer.setSingleShot(True)
 
-        self.camera = None
+        self.cameras = None
+        self.top_camera = None
+        self.back_camera = None
         self.lamb_label = ""
         self.frame = (None, None)
         self.weight = 0.0
@@ -120,9 +122,12 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_start_streams(self):
         print("Entered state start_streams")
+        started = True
         try:
-            self.camera = RSCamera()
-            if self.camera.start():
+            self.cameras = [self.top_camera, self.back_camera] = RSCameras()
+            for cam in self.cameras:
+                started = True if cam.start() and started else False
+            if started:
                 self.info_timer.start()
                 self.t_start_streams_to_get_frames.emit()
             else:
@@ -145,9 +150,9 @@ class SpecificWorker(GenericWorker):
             send_msg(get_saved_info())
             self.info_timer.start()
         try:
-            self.frame = self.camera.get_frame()
+            self.frame = self.cameras.get_frame()
             while self.timer.remainingTime() > 0:
-                self.frame = self.camera.get_frame()
+                self.frame = self.cameras.get_frame()
             self.weight = get_weight()
             if self.weight is None:
                 send_msg("Problem getting the json file from the weighing machine's url: {}".format(url))
@@ -163,8 +168,8 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_no_camera(self):
         print("Entered state no_camera")
-        self.camera.__del__()
-        self.camera = None
+        self.cameras.__del__()
+        self.cameras = None
         self.no_cam += 1
         if self.no_cam >= 12:
             self.t_no_camera_to_send_message.emit()
@@ -233,7 +238,7 @@ class SpecificWorker(GenericWorker):
         print("Entered state exit")
         self.telegram_bot.do_run = False
         self.telegram_bot.join()
-        # self.camera.__del__()
+        # self.cameras.__del__()
         self.t_lambscan_to_end.emit()
 
 # =================================================================

@@ -5,7 +5,7 @@ __HEIGHT__ = 480
 __WIDTH__ = 640
 
 
-class RSCamera:
+class RSCameras:
 	"""
 	It configures and manages the camera device (RealSense D415, D400 series) and its library (PyRealSense2).
 	"""
@@ -41,6 +41,12 @@ class RSCamera:
 			print(e)
 			print(type(e))
 			return False
+
+	def get_frames(self, worker):
+		def get_new_frame():
+			for cam in worker.cameras:
+				pass
+			# TODO
 
 	def get_frame(self):
 		"""

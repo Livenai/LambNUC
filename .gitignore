@@ -11,21 +11,14 @@ savings/*
 
 PY2venv/
 
-*/telegram_token.txt
-
-*/telegram_ids.cfg
-
-etc/ngrok
-
 .vscode/
 
 .DS_Store
 
 scratch/
 
-etc/weighing_url.txt
-
 CNN_model.h5
-etc/mock/
 
-etc/sys_pass.txt
+index.html
+
+etc/
