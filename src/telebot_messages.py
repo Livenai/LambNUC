@@ -4,7 +4,7 @@ import telepot
 from telepot.loop import MessageLoop
 import os
 import time
-from FileManager import get_saved_info
+from FileManager import get_saved_info, parent_folder
 from threading import currentThread
 from emoji import emojize
 
@@ -15,10 +15,10 @@ def send_msg(text: str):
 
     try:
         # iniciamos el bot
-        with open(os.path.join(os.path.expanduser("~"), "LambNN", "etc", "telegram_token.txt"), "r") as f:
+        with open(os.path.join(parent_folder, "etc", "telegram_token.txt"), "r") as f:
             token = f.readline()[:-1]
         BOT = telepot.Bot(token)
-        telegram_config = os.path.join(os.path.expanduser("~"), "LambNN", "etc", "telegram_ids.cfg")
+        telegram_config = os.path.join(parent_folder, "etc", "telegram_ids.cfg")
 
         # obtenemos los IDs a los que vamos a enviar el mensaje y enviamos el mensaje a cada ID
         with open(telegram_config, "r") as f:
@@ -35,9 +35,7 @@ def send_msg(text: str):
 
 def start_bot():
     t = currentThread()
-    parent_folder = os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-
-    with open(os.path.join(os.path.expanduser("~"), "LambNN", "etc", "telegram_token.txt"), "r") as f:
+    with open(os.path.join(parent_folder, "etc", "telegram_token.txt"), "r") as f:
         my_token = f.readline()[:-1]
     my_bot = telepot.Bot(my_token)
 
@@ -58,7 +56,7 @@ def start_bot():
 
         no_rights = False
 
-        sudo = "echo \"" + sys_pass + "\" | sudo -S " # es importante que haya un espacio despues de -S
+        sudo = "echo \"" + sys_pass + "\" | sudo -S "  # es importante que haya un espacio despues de -S
         if content_type == "text":
             text = msg["text"]
 
@@ -78,7 +76,7 @@ def start_bot():
                     else:
                         my_bot.sendMessage(chat_id=chat_id, text='fail')
                 else:
-                 no_rights = True
+                    no_rights = True
 
             elif text == "/stop_ngrok":
                 if str_chat_id in admin_ids:

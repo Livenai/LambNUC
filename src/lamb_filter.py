@@ -30,18 +30,25 @@ def crop_image(in_array, x, y, h, w):
     return in_array[y:y + h, x:x + w]
 
 
-def isThereALamb(color_image, depth_image, model):
+def isThereALamb(cameras, model):
     """
     Asks if the current image has a lamb in a right position
-    :param color_image: numpy array (640, 480, 3) shape RGB image.
-    :param depth_image: numpy array (640, 480, 1) shape Depth image.
+    :param cameras: collection of RSCameras which already have color and depth images
+        color image: numpy array (640, 480, 3) shape RGB image.
+        depth image: numpy array (640, 480, 1) shape Depth image.
     :return: tuple(bool, string) string with the predicted image's label;
         it might be there's a part of a lamb in the image (still False).
     """
+    depth_image = None
+    img = None
     # We only use the depth_image right now.
-    # crop
-    img = crop_image(depth_image, 38, 102, 230, 510)
-    img = filter_flies(depth_image_cropped=img)
+    for cam in cameras:
+        if cam.name == "top":
+            depth_image = cam.depth_image
+    if depth_image is not None:
+        # Crop
+        img = crop_image(depth_image, 38, 102, 230, 510)
+        img = filter_flies(depth_image_cropped=img)
 
     if img is not None:
 

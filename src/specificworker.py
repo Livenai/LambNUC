@@ -27,7 +27,7 @@ from genericworker import *
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
 import os
-from FileManager import save_info, FileManager, get_saved_info, url, get_weight
+from FileManager import save_info, FileManager, get_saved_info, url, get_weight, parent_folder
 from PySide2 import QtCore
 from rs_camera import RSCamera, config_devices
 from lamb_filter import isThereALamb
@@ -53,11 +53,8 @@ class SpecificWorker(GenericWorker):
         self.info_timer.setInterval(self.Info_period)
         self.info_timer.setSingleShot(True)
 
-        self.cameras = None
-        self.top_camera = None
-        self.back_camera = None
+        self.cameras = []
         self.lamb_label = ""
-        self.frame = (None, None)
         self.weight = 0.0
 
         self.telegram_bot = Thread(target=start_bot)
@@ -66,7 +63,7 @@ class SpecificWorker(GenericWorker):
         self.Application.start()
 
         # Load the CNN model with the path to the .h5 model path
-        self.CNNmodel = models.load_model(os.path.join(os.path.expanduser('~'), 'LambNN', "etc", "CNN_model.h5"))
+        self.CNNmodel = models.load_model(os.path.join(parent_folder, "etc", "CNN_model.h5"))
 
     def receive_signal(self, signum, stack):
         print("\n\n\t[eCtrl + C]\n\n")
@@ -92,7 +89,7 @@ class SpecificWorker(GenericWorker):
     def sm_init(self):
         """ First state of the state machine, it triggers the LambScan main state """
         print("Entered state init")
-        send_msg("LambNN started")
+        send_msg("LambNN initiated")
         signal.signal(signal.SIGINT, self.receive_signal)
         self.t_init_to_lambscan.emit()
 
@@ -124,11 +121,14 @@ class SpecificWorker(GenericWorker):
         print("Entered state start_streams")
         started = True
         try:
-            self.camera = config_devices()
+            self.cameras = config_devices()
             for cam in self.cameras:
                 started = True if cam.start() and started else False
             if started:
                 self.info_timer.start()
+                send_msg("LambNN started with {} cams".format(len(self.cameras)))
+                for cam in self.cameras:
+                    send_msg("Camera {} ready", cam.name)
                 self.t_start_streams_to_get_frames.emit()
             else:
                 raise Exception("It couldn't start the streams")
@@ -150,9 +150,11 @@ class SpecificWorker(GenericWorker):
             send_msg(get_saved_info())
             self.info_timer.start()
         try:
-            self.frame = self.cameras.get_frame()
             while self.timer.remainingTime() > 0:
-                self.frame = self.cameras.get_frame()
+                for cam in self.cameras:
+                    cam.get_frame()
+            for cam in self.cameras:
+                cam.get_frame()
             self.weight = get_weight()
             if self.weight is None:
                 send_msg("Problem getting the json file from the weighing machine's url: {}".format(url))
@@ -168,8 +170,9 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_no_camera(self):
         print("Entered state no_camera")
-        self.cameras.__del__()
-        self.cameras = None
+        for cam in self.cameras:
+            cam.__del__()
+        self.cameras = []
         self.no_cam += 1
         if self.no_cam >= 12:
             self.t_no_camera_to_send_message.emit()
@@ -195,7 +198,7 @@ class SpecificWorker(GenericWorker):
     def sm_processing_and_filter(self):
         print("Entered state processing_and_filter")
         self.no_cam = 0
-        must_save, self.lamb_label = isThereALamb(*self.frame, model=self.CNNmodel)
+        must_save, self.lamb_label = isThereALamb(self.cameras, model=self.CNNmodel)
         if must_save:
             self.t_processing_and_filter_to_save.emit()
         else:
@@ -208,7 +211,7 @@ class SpecificWorker(GenericWorker):
     def sm_save(self):
         print("Entered state save")
         try:
-            save_info(*self.frame, weight=self.weight, lamb_label=self.lamb_label)
+            save_info(self.cameras, weight=self.weight, lamb_label=self.lamb_label)
             self.lamb_label = ""
             self.weight = 0.0
             self.t_save_to_get_frames.emit()
@@ -238,7 +241,11 @@ class SpecificWorker(GenericWorker):
         print("Entered state exit")
         self.telegram_bot.do_run = False
         self.telegram_bot.join()
-        # self.cameras.__del__()
+        for cam in self.cameras:
+            try:
+                cam.stop()
+            except:
+                pass
         self.t_lambscan_to_end.emit()
 
 # =================================================================
