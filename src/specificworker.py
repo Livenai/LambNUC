@@ -29,7 +29,7 @@ from genericworker import *
 import os
 from FileManager import save_info, FileManager, get_saved_info, url, get_weight
 from PySide2 import QtCore
-from rs_camera import RSCameras
+from rs_camera import RSCamera, config_devices
 from lamb_filter import isThereALamb
 import signal
 from telebot_messages import send_msg, start_bot
@@ -124,7 +124,7 @@ class SpecificWorker(GenericWorker):
         print("Entered state start_streams")
         started = True
         try:
-            self.cameras = [self.top_camera, self.back_camera] = RSCameras()
+            self.camera = config_devices()
             for cam in self.cameras:
                 started = True if cam.start() and started else False
             if started:

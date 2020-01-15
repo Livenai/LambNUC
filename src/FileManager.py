@@ -6,18 +6,18 @@ from datetime import datetime, date
 import cv2
 from json import dumps
 from subprocess import check_output
-import numpy as np
 
 
 class FileManager(Exception):
     pass
 
 
-parent_folder = os.path.join(os.path.expanduser('~'), 'LambNN')
+parent_folder = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 # Get the url
 with open(os.path.join(parent_folder, "etc", "weighing_url.txt"), "r") as f:
     url = f.readline().replace("\n", "")
+
 
 def get_saved_info():
     """
