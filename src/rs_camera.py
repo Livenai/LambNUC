@@ -13,7 +13,7 @@ class RSCamera:
     It configures and manages the camera device (RealSense D415, D400 series) and its library (PyRealSense2).
     """
 
-    def __init__(self, serial, name="cam01", fps=16):
+    def __init__(self, serial, name="cam01", fps=15):
         # Configure depth and color streams
         self.__config__ = rs.config()
         self.__config__.enable_stream(rs.stream.depth, __WIDTH__, __HEIGHT__, rs.format.z16, fps)
@@ -43,6 +43,7 @@ class RSCamera:
         """
         try:
             # Start streaming
+            print("Starting the pipeline of the camera...")
             self.__pipeline__.start(self.__config__)
             print("Streams of the ", self.name, " cam is OK.")
             return True

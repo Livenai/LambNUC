@@ -124,11 +124,12 @@ class SpecificWorker(GenericWorker):
             self.cameras = config_devices()
             for cam in self.cameras:
                 started = True if cam.start() and started else False
+            print("After started the streams, started value is : ", started)
             if started:
                 self.info_timer.start()
                 send_msg("LambNN started with {} cams".format(len(self.cameras)))
-                for cam in self.cameras:
-                    send_msg("Camera {} ready", cam.name)
+                # for cam in self.cameras:
+                #     send_msg("Camera {} ready", cam.name)
                 self.t_start_streams_to_get_frames.emit()
             else:
                 raise Exception("It couldn't start the streams")
@@ -141,6 +142,8 @@ class SpecificWorker(GenericWorker):
     #
     @QtCore.Slot()
     def sm_get_frames(self):
+        print("\n\n")
+        print("Entered state get_frames")
         print("Entered state get_frames")
         if self.exit:
             print("\n\n\t[!] Ctrl + C received. Closing program...\n\n")

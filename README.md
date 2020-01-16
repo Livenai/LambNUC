@@ -3,8 +3,15 @@
 #
 ``` LambScan
 ```
-Intro to component here
+# LambScan
+Robolab's LambScan project.
 
+This project uses the [Intel's RealSense Library](https://github.com/IntelRealSense/librealsense) for
+ their [D400 series cameras](https://www.intelrealsense.com/depth-camera-d415/).
+
+At the moment of this development, the RealSense SDK only supports Ubuntu LTS kernels 4.4, 4.8, 4.10, 4.13, 4.15 and 4.18.
+So, you should downgrade the kernel to use this code in order to use the DKMS installer for Realsense SDK. Also, you can
+build the library from the source and apply some manual patches to be able to run it.
 
 ## Configuration parameters
 As any other component,
