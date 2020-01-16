@@ -30,12 +30,13 @@ def crop_image(in_array, x, y, h, w):
     return in_array[y:y + h, x:x + w]
 
 
-def isThereALamb(cameras, model):
+def is_there_a_lamb(cameras, model):
     """
     Asks if the current image has a lamb in a right position
     :param cameras: collection of RSCameras which already have color and depth images
         color image: numpy array (640, 480, 3) shape RGB image.
         depth image: numpy array (640, 480, 1) shape Depth image.
+    :param model: loaded keras' h5 model with the classifier neural network
     :return: tuple(bool, string) string with the predicted image's label;
         it might be there's a part of a lamb in the image (still False).
     """
@@ -44,6 +45,9 @@ def isThereALamb(cameras, model):
     # We only use the depth_image right now.
     for cam in cameras:
         if cam.name == "top":
+            depth_image = cam.depth_image
+            break
+        elif cam.name == "default" and depth_image is None:
             depth_image = cam.depth_image
     if depth_image is not None:
         # Crop
@@ -70,7 +74,7 @@ def isThereALamb(cameras, model):
             # return not bool(np.random.randint(20)), "wrong"
             return not bool(np.random.randint(10)), "wrong"
         else:
-            print("[!] Impossible print. Something is wrong in isThereALamb()")
+            print("[!] Impossible print. Something is wrong in is_there_a_lamb()")
 
         return True, "to_check"
     else:

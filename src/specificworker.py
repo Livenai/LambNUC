@@ -30,7 +30,7 @@ import os
 from FileManager import save_info, FileManager, get_saved_info, url, get_weight, parent_folder
 from PySide2 import QtCore
 from rs_camera import RSCamera, config_devices
-from lamb_filter import isThereALamb
+from lamb_filter import is_there_a_lamb
 import signal
 from telebot_messages import send_msg, start_bot
 from keras import models
@@ -120,16 +120,16 @@ class SpecificWorker(GenericWorker):
     def sm_start_streams(self):
         print("Entered state start_streams")
         started = True
+        msg = ""
         try:
             self.cameras = config_devices()
             for cam in self.cameras:
                 started = True if cam.start() and started else False
-            print("After started the streams, started value is : ", started)
+                if started:
+                    msg += "{} camera is ready\n".format(cam.name)
             if started:
                 self.info_timer.start()
-                send_msg("LambNN started with {} cams".format(len(self.cameras)))
-                # for cam in self.cameras:
-                #     send_msg("Camera {} ready", cam.name)
+                send_msg("LambNN started with {} cams\n{}".format(len(self.cameras), msg))
                 self.t_start_streams_to_get_frames.emit()
             else:
                 raise Exception("It couldn't start the streams")
@@ -142,8 +142,6 @@ class SpecificWorker(GenericWorker):
     #
     @QtCore.Slot()
     def sm_get_frames(self):
-        print("\n\n")
-        print("Entered state get_frames")
         print("Entered state get_frames")
         if self.exit:
             print("\n\n\t[!] Ctrl + C received. Closing program...\n\n")
@@ -172,9 +170,12 @@ class SpecificWorker(GenericWorker):
     #
     @QtCore.Slot()
     def sm_no_camera(self):
-        print("Entered state no_camera")
+        print("Entered Exception state No_Camera")
         for cam in self.cameras:
-            cam.__del__()
+            try:
+                del cam
+            except:
+                pass
         self.cameras = []
         self.no_cam += 1
         if self.no_cam >= 12:
@@ -187,7 +188,7 @@ class SpecificWorker(GenericWorker):
     #
     @QtCore.Slot()
     def sm_no_memory(self):
-        print("Entered state no_memory")
+        print("Entered Exception state No_Memory")
         self.no_memory += 1
         if self.no_memory > 2:
             self.t_no_memory_to_send_message.emit()
@@ -199,9 +200,9 @@ class SpecificWorker(GenericWorker):
     #
     @QtCore.Slot()
     def sm_processing_and_filter(self):
-        print("Entered state processing_and_filter")
+        print("Entered state Processing & Filter")
         self.no_cam = 0
-        must_save, self.lamb_label = isThereALamb(self.cameras, model=self.CNNmodel)
+        must_save, self.lamb_label = is_there_a_lamb(self.cameras, model=self.CNNmodel)
         if must_save:
             self.t_processing_and_filter_to_save.emit()
         else:
@@ -212,7 +213,7 @@ class SpecificWorker(GenericWorker):
     #
     @QtCore.Slot()
     def sm_save(self):
-        print("Entered state save")
+        print("Entered state Save")
         try:
             save_info(self.cameras, weight=self.weight, lamb_label=self.lamb_label)
             self.lamb_label = ""
@@ -241,12 +242,12 @@ class SpecificWorker(GenericWorker):
     #
     @QtCore.Slot()
     def sm_exit(self):
-        print("Entered state exit")
+        print("Entered state Exit")
         self.telegram_bot.do_run = False
         self.telegram_bot.join()
         for cam in self.cameras:
             try:
-                cam.stop()
+                del cam
             except:
                 pass
         self.t_lambscan_to_end.emit()

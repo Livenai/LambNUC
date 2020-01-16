@@ -25,8 +25,6 @@ class RSCamera:
         self.color_image = None
         self.depth_image = None
 
-    # self.__config__.enable_stream(rs.stream.infrared)
-
     def __del__(self):
         try:
             self.stop()
@@ -43,9 +41,8 @@ class RSCamera:
         """
         try:
             # Start streaming
-            print("Starting the pipeline of the camera...")
             self.__pipeline__.start(self.__config__)
-            print("Streams of the ", self.name, " cam is OK.")
+            print("Streams of the ", self.name, " cam are OK.")
             return True
         except Exception as e:
             print(e)
@@ -98,25 +95,27 @@ def _search(_dict, searchFor):
 
 def config_devices():
     devices = []
-    cams = {}
-    with open(os.path.join(parent_folder, "etc", "camera_serials.json"), "r") as f:
-        cams = json.load(f)
+    try:
+        with open(os.path.join(parent_folder, "etc", "camera_serials.json"), "r") as f:
+            cams = json.load(f)
+    except:
+        cams = {}
     for k, v in cams.items():
         cams[k] = {"serial": v, "available": False}
-    print(cams)
     context = rs.context()
     for dev in context.devices:
         serial_number = int(dev.get_info(rs.camera_info.serial_number))
         key = _search(cams, serial_number)
         if key is not None:
             cams[key]["available"] = True
-    print(cams)
+        else:
+            cams["default"] = {"serial": serial_number, "available": True}
+    print("Cams:  ", cams)
     for k, v in cams.items():
         if v["available"]:
             try:
                 new_cam = RSCamera(name=k, serial=v["serial"])
                 devices.append(new_cam)
-                print("everything were fine.")
             except:
                 print("there are problems creating the camera pipeline")
     cams = {}

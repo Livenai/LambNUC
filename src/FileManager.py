@@ -103,6 +103,7 @@ def save_json(w_id, filenames, lamb_label, weight):
     :param w_id: string identifier of the image
     :param filenames: dictionary with the paths of the images
     :param lamb_label: string with the label of the lamb image (lamb, empty or wrong)
+    :param weight: float with the weight of the current lamb
     """
     # Load and update the json
     weight_path = os.path.join(parent_folder, "savings", str(str(date.today()) + "_.json"))
@@ -119,7 +120,7 @@ def save_json(w_id, filenames, lamb_label, weight):
         f.write(json.dumps(data_weight, sort_keys=True, indent=4))
 
 
-def save_frames(cameras, lamb_label=None, cam="cam01"):
+def save_frames(cameras, lamb_label=None):
     """
     It saves the current frame to a file for each type of frame (2: color and depth)
     it also creates the folders needed to the specified path of the files.
@@ -127,8 +128,7 @@ def save_frames(cameras, lamb_label=None, cam="cam01"):
         color image: numpy array with (640x480x3) of shape, the color image.
         depth image: numpy array with (640x480x1) of shape, the depth image.
     :param lamb_label: string with info of the lamb which is in the image.
-    :param cam: string with the info of the camera where the frames have been taken.
-    :return tuple(w_id, filename): string with the id of the frames (for the json file),
+    :return tuple(id, filename): string with the id of the frames (for the json file) (tmstamp_id),
         and the depth full filename with its path
     """
     today = str(date.today())
@@ -140,15 +140,15 @@ def save_frames(cameras, lamb_label=None, cam="cam01"):
         path_color = mkdirs(parent_folder, ("savings", "color", lamb_label, today))
         mkdirs(parent_folder, ("savings", "depth", lamb_label, today))
     ts = time.time()
-    timestamp = str(datetime.fromtimestamp(ts)).replace(":", "-")
+    tmstamp_id = str(datetime.fromtimestamp(ts)).replace(":", "-")
     filenames = {}
     for cam in cameras:
         color_frame = cam.color_image
         depth_frame = cam.depth_image
 
-        filename = os.path.join(path_color, "{}_{}_{}_cam.png".format(timestamp, cam.name, "color"))
+        filename = os.path.join(path_color, "{}_{}_{}_cam.png".format(tmstamp_id, "color", cam.name))
 
-        filenames["path_color_{}".format(cam.name)] = filename.replace(str(parent_folder), "")
+        filenames["path_color_{}_image".format(cam.name)] = filename.replace(str(parent_folder), "")
 
         # Save frames
         correct, filename = __is_new_file_correct__(filename)
@@ -158,14 +158,14 @@ def save_frames(cameras, lamb_label=None, cam="cam01"):
             raise FileManager("filename incorrect!!")
         # They both have a similar path, so this is more efficient; otherwise we should use the path_depth
         filename = filename.replace("color", "depth")
-        filenames["path_depth_{}".format(cam.name)] = filename.replace(str(parent_folder), "")
+        filenames["path_depth_{}_image".format(cam.name)] = filename.replace(str(parent_folder), "")
         correct, filename = __is_new_file_correct__(filename)
         if correct:
             cv2.imwrite(filename=filename, img=depth_frame)
         else:
             raise FileManager("filename incorrect!!")
         # w_id = str(os.path.basename(filename))[0:-15]
-    return timestamp, filenames, ts
+    return tmstamp_id, filenames, ts
 
 
 def save_info(cameras, weight, lamb_label=None):
@@ -176,8 +176,7 @@ def save_info(cameras, weight, lamb_label=None):
         color image: numpy array with (640x480x3) of shape, the color image.
         depth image: numpy array with (640x480x1) of shape, the depth image.
     :param lamb_label: string with info of the lamb which is in the image.
-    :param cam: string with the info of the camera where the frames have been taken.
-    :return w_id: string with the identifier of the frames
+    :param weight: string with the info of the camera where the frames have been taken.
     """
     w_id, filenames, ts = save_frames(cameras, lamb_label)
     save_json(w_id, filenames, lamb_label, weight)
