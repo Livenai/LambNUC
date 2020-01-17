@@ -67,12 +67,10 @@ def is_there_a_lamb(cameras, model):
             return True, "lamb"
         elif result_index == 1:
             print("\t CNN msg: There's no lamb. \t label:empty")
-            # return not bool(np.random.randint(120)), "empty"
-            return not bool(np.random.randint(60)), "empty"
+            return not bool(np.random.randint(140)), "empty"
         elif result_index == 2:
             print("\t CNN msg: There's prob. a lamb in a wrong position: \t label:wrong")
-            # return not bool(np.random.randint(20)), "wrong"
-            return not bool(np.random.randint(10)), "wrong"
+            return not bool(np.random.randint(80)), "wrong"
         else:
             print("[!] Impossible print. Something is wrong in is_there_a_lamb()")
 
