@@ -43,6 +43,7 @@ class SpecificWorker(GenericWorker):
         self.exit = False
         self.no_cam = 0
         self.no_memory = 0
+        self.no_weight = 0
         self.Period = 1000  # 1 second for frame
 
         self.timer.setInterval(self.Period)
@@ -163,7 +164,11 @@ class SpecificWorker(GenericWorker):
                 cam.get_frame()
             self.weight = get_weight()
             if self.weight is None:
-                send_msg("Problem getting the json file from the weighing machine's url: {}".format(url))
+                self.no_weight+=1
+                if self.no_weight >= 12:
+                    send_msg("Problem getting the json file from the weighing machine's url: {}".format(url))
+            else:
+                self.no_weight = 0
             self.t_get_frames_to_processing_and_filter.emit()
         except Exception as e:
             print("An error occur when taking a new frame,:\n " + str(e))
