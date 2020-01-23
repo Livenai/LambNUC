@@ -130,9 +130,14 @@ class SpecificWorker(GenericWorker):
             if started:
                 self.info_timer.start()
                 send_msg("LambNN started with {} cams\n{}".format(len(self.cameras), msg))
-                self.t_start_streams_to_get_frames.emit()
+                if len(self.cameras) > 0:
+                    self.t_start_streams_to_get_frames.emit()
+                else:
+                    print("ERROR: There is no recognized camera connected")
+                    self.t_start_streams_to_no_camera.emit()
             else:
-                raise Exception("It couldn't start the streams")
+                print("ERROR: It couldn't start the streams")
+                self.t_start_streams_to_no_camera.emit()
         except Exception as e:
             print("problem starting the streams of the camera\n", e)
             self.t_start_streams_to_no_camera.emit()

@@ -49,6 +49,11 @@ def is_there_a_lamb(cameras, model):
             break
         elif cam.name == "default" and depth_image is None:
             depth_image = cam.depth_image
+        elif depth_image is None:
+            img = cam.depth_image
+    if depth_image is None and img is not None:
+        depth_image = img
+    img = None
     if depth_image is not None:
         # Crop
         img = crop_image(depth_image, 38, 102, 230, 510)
