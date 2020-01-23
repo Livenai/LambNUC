@@ -49,7 +49,7 @@ def get_saved_info():
     info_msg = {"lamb": make_info(paths[0]), "empty": make_info(paths[1]), "wrong": make_info(paths[2])}
 
     # Ask to the (Linux) system and process the output
-    space_available = str(check_output(['df', '-H', '/dev/sda2']), encoding="latin1").replace("Tama\u00c3\u00b1o",
+    space_available = str(check_output(['df', '-H', '/dev/sda1']), encoding="latin1").replace("Tama\u00c3\u00b1o",
                                                                                               "Total_Size").split()
     space_available = dict(zip(space_available[0:6], space_available[7:]))
     # formatting the result to make it pretty
