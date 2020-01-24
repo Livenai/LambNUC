@@ -36,14 +36,16 @@ from telebot_messages import send_msg, start_bot
 from keras import models
 from threading import Thread
 
+ATTEMPS_TO_STREAM = 12
+ATTEMPS_TO_SAVE = 2
+ATTEMPS_TO_URL = 4
+
 
 class SpecificWorker(GenericWorker):
     def __init__(self, proxy_map):
         super(SpecificWorker, self).__init__(proxy_map)
         self.exit = False
-        self.no_cam = 0
-        self.no_memory = 0
-        self.no_weight = 0
+        self.exceptions = [0, 0, 0] # [no_cam, no_memory, no_url]
         self.Period = 1000  # 1 second for frame
 
         self.timer.setInterval(self.Period)
@@ -121,27 +123,27 @@ class SpecificWorker(GenericWorker):
     def sm_start_streams(self):
         print("Entered state start_streams")
         started = True
-        msg = ""
         try:
             self.cameras = config_devices()
             for cam in self.cameras:
                 started = True if cam.start() and started else False
-                if started:
-                    msg += "{} camera is ready\n".format(cam.name)
             if started:
                 self.info_timer.start()
-                send_msg("LambNN started with {} cams\n{}".format(len(self.cameras), msg))
                 if len(self.cameras) > 0:
+                    self.exceptions[0] = 0
                     self.t_start_streams_to_get_frames.emit()
                 else:
                     print("ERROR: There is no recognized camera connected")
-                    self.t_start_streams_to_no_camera.emit()
+                    self.exceptions[0] += 1 
+                    self.t_start_streams_to_exception.emit()
             else:
                 print("ERROR: It couldn't start the streams")
-                self.t_start_streams_to_no_camera.emit()
+                self.exceptions[0] += 1
+                self.t_start_streams_to_exception.emit()
         except Exception as e:
             print("problem starting the streams of the camera\n", e)
-            self.t_start_streams_to_no_camera.emit()
+            self.exceptions[0] += 1
+            self.t_start_streams_to_exception.emit()
 
     #
     # sm_get_frames
@@ -154,6 +156,10 @@ class SpecificWorker(GenericWorker):
             self.t_get_frames_to_exit.emit()
         self.timer.start()
         if self.info_timer.remainingTime() == 0:
+            msg = ""
+            for cam in self.cameras:
+                msg += "  # {} camera is ready.\n".format(cam.name)
+            send_msg("LambNN working with {} cams\n{}".format(len(self.cameras), msg))
             send_msg(get_saved_info())
             self.info_timer.start()
         try:
@@ -164,46 +170,43 @@ class SpecificWorker(GenericWorker):
                 cam.get_frame()
             self.weight = get_weight()
             if self.weight is None:
-                self.no_weight+=1
-                if self.no_weight >= 12:
-                    send_msg("Problem getting the json file from the weighing machine's url: {}".format(url))
+                self.exceptions[2] += 1
+                self.t_get_frames_to_exception.emit()
             else:
-                self.no_weight = 0
+                self.exceptions = [0, 0, 0]
             self.t_get_frames_to_processing_and_filter.emit()
         except Exception as e:
             print("An error occur when taking a new frame,:\n " + str(e))
             print(type(e))
-            self.t_get_frames_to_no_camera.emit()
+            self.exceptions[0] += 1
+            self.t_get_frames_to_exception.emit()
+
 
     #
-    # sm_no_camera
+    # sm_exception
     #
     @QtCore.Slot()
-    def sm_no_camera(self):
-        print("Entered Exception state No_Camera")
-        for cam in self.cameras:
-            try:
-                del cam
-            except:
-                pass
-        self.cameras = []
-        self.no_cam += 1
-        if self.no_cam >= 12:
-            self.t_no_camera_to_send_message.emit()
+    def sm_exception(self):
+        print("Entered Exception State")
+        if 0 < self.exceptions[0]:
+            for cam in self.cameras:
+                try:
+                    del cam
+                except:
+                    pass
+            if self.exceptions[0] >= ATTEMPS_TO_STREAM: # There's no camera
+                self.t_exception_to_send_message.emit()
+            else:
+                self.t_exception_to_start_streams.emit()
+        elif 0 < self.exceptions[1]: # There's a problem with the disk memory
+            if self.no_memory > ATTEMPS_TO_SAVE:
+                self.t_exception_to_send_message.emit()
+            else:
+                self.t_exception_to_save.emit()
+        elif 0 < self.exceptions[2] < ATTEMPS_TO_URL: # There's a problem with the weight's URL
+            self.t_exception_to_get_frames.emit()
         else:
-            self.t_no_camera_to_start_streams.emit()
-
-    #
-    # sm_no_memory
-    #
-    @QtCore.Slot()
-    def sm_no_memory(self):
-        print("Entered Exception state No_Memory")
-        self.no_memory += 1
-        if self.no_memory > 2:
-            self.t_no_memory_to_send_message.emit()
-        else:
-            self.t_no_memory_to_save.emit()
+            self.t_exception_to_send_message.emit()
 
     #
     # sm_processing_and_filter
@@ -228,23 +231,23 @@ class SpecificWorker(GenericWorker):
             save_info(self.cameras, weight=self.weight, lamb_label=self.lamb_label)
             self.lamb_label = ""
             self.weight = 0.0
+            self.exceptions = [0, 0, 0]
             self.t_save_to_get_frames.emit()
         except FileManager as e:
             print(("Problem saving the file\n", e))
-            self.t_save_to_no_memory.emit()
+            self.exceptions[1] += 1
+            self.t_save_to_exception.emit()
 
     #
     # sm_send_message
     #
     @QtCore.Slot()
     def sm_send_message(self):
-        if self.no_cam > 0:
-            send_msg("[ ! ] Camara desconectada. " + str(self.no_cam) + " intentos de reconexion agotados.")
-        elif self.no_memory > 0:
-            send_msg("[ ! ] Error en la memoria del dispositivo. " + str(
-                self.no_memory) + " intentos de escritura agotados.")
-        else:
+        if self.exceptions == [0, 0, 0]:
             send_msg("[ ? ] Estado SEND_MESSAGE incoherente. Se ha accedido a este estado sin que haya un error.")
+        else:
+            send_msg("Error en LambScan, excepciones: \n {} Intentos de reconexión a la cámara. \n {} Intentos de escritura en memoria. \n {} Intentos de conexión a la URL de la báscula ({}).".format(
+            *self.exceptions, url))
         self.t_send_message_to_exit.emit()
 
     #

@@ -13,16 +13,15 @@ Application
 :lambscan
 {
     initial_state start_streams;
-    states get_frames, processing_and_filter, save, no_camera, no_memory, send_message;
+    states get_frames, processing_and_filter, save, send_message, exception;
     end_state exit;
     transitions
     {
-        start_streams => get_frames, no_camera, send_message;
-        get_frames => processing_and_filter, no_camera, get_frames, exit;
+        start_streams => get_frames, exception,send_message;
+        get_frames => processing_and_filter, exception, get_frames, exit;
         processing_and_filter => get_frames, save;
-        save => get_frames, no_memory;
-        no_camera => start_streams, send_message;
-        no_memory => save, send_message;
+        save => get_frames, exception;
+        exception => start_streams, get_frames, send_message, save;
         send_message => exit;
     };
 };
