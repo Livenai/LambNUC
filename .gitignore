@@ -22,3 +22,5 @@ CNN_model.h5
 index.html
 
 etc/
+
+src/*.save

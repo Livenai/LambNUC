@@ -6,7 +6,7 @@ from datetime import datetime, date
 import cv2
 from json import dumps
 from subprocess import check_output
-
+from telebot_send import send_msg
 
 class FileManager(Exception):
     pass
@@ -150,10 +150,13 @@ def save_frames(cameras, lamb_label=None):
 
         filenames["path_color_{}_image".format(cam.name)] = filename.replace(str(parent_folder), "")
 
+        filename = filename.replace(" ", "__")
+
         # Save frames
         correct, filename = __is_new_file_correct__(filename)
         if correct:
-            cv2.imwrite(filename=filename, img=color_frame)
+            pass # NO GUARDAMOS LAS IMAGENES DE COLOR ###################################################
+            #cv2.imwrite(filename=filename, img=color_frame)
         else:
             raise FileManager("filename incorrect!!")
         # They both have a similar path, so this is more efficient; otherwise we should use the path_depth
@@ -170,7 +173,7 @@ def save_frames(cameras, lamb_label=None):
 
 def save_info(cameras, weight, lamb_label=None):
     """
-    It saves the frame as image files (color and depth), creates the folders requested to the files,
+    If the disk usage is under 90%, it saves the frame as image files (color and depth), creates the folders requested to the files,
     and updates a json file with info of the frames for each day.
     :param cameras: collection of RSCameras with color and depth images
         color image: numpy array with (640x480x3) of shape, the color image.
@@ -178,8 +181,19 @@ def save_info(cameras, weight, lamb_label=None):
     :param lamb_label: string with info of the lamb which is in the image.
     :param weight: string with the info of the camera where the frames have been taken.
     """
-    w_id, filenames, ts = save_frames(cameras, lamb_label)
-    save_json(w_id, filenames, lamb_label, weight)
+
+    #check disk usage
+    disk_usage = int(str(check_output(['df', '--output=pcent', '/dev/sda1']), encoding='utf-8').split("\n")[1].replace(" ","").replace("%",""))
+
+    if disk_usage < 90:
+        print("Disk usage: " + str(disk_usage) + "%")
+        #saving frames and json data
+        w_id, filenames, ts = save_frames(cameras, lamb_label)
+        save_json(w_id, filenames, lamb_label, weight)
+    else:
+        print("[!] Disk usage over 90%\nNO FRAMES SAVED.")
+        #Telegram msg to warn about disk usage
+        send_msg(":double_exclamation_mark: Disk usage over 90% (" + str(disk_usage) + "%)")
 
 
 def __is_new_file_correct__(file):

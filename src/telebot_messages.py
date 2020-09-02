@@ -23,7 +23,7 @@ def send_msg(text: str):
         # obtenemos los IDs a los que vamos a enviar el mensaje y enviamos el mensaje a cada ID
         with open(telegram_config, "r") as f:
             for user_id in f:
-                bot.sendMessage(user_id, text)
+                bot.sendMessage(user_id, emojize(text))
 
         print("\n\n======== Mensaje enviado correctamente ========\n")
 
