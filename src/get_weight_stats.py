@@ -4,11 +4,8 @@ Para ello necesita leer los archivos .json del dataset.
 """
 
 import glob, json, os
-from colored import fg, attr
 import numpy as np
 
-B = fg(15)
-C = fg(45)
 
 UMBRAL_MAX_PESO = 35.0
 
@@ -18,22 +15,30 @@ parent_folder = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 num_images = 0
 all_data = []
 
-# obtencion de datos de cada JSON
-for json_number, json_name in enumerate(glob.glob(os.path.join(os.path.join(parent_folder, "savings"), '*.json'))):
-	# abrimos el json
-	f = open(json_name)
-	j = json.load(f)
 
-	# por cada entrada
-	i = 0
-	for key in j:
-		num_images = num_images + 1
-		i += 1
-		all_data.append(j[key])
-	print("Numero del Json: " + C + str(json_number) + B)
-	print("Imagenes en el Json: " + C + str(i) + B, end='\n\n')
+try:
+	# obtencion de datos de cada JSON
+	for json_number, json_name in enumerate(glob.glob(os.path.join(os.path.join(parent_folder, "savings"), '*.json'))):
+		# abrimos el json
+		f = open(json_name)
+		j = json.load(f)
 
-print(attr(4) + "Imagenes Totales:" + attr(0) + " " + C + str(num_images) + B, end='\n\n')
+		# por cada entrada
+		i = 0
+		for key in j:
+			num_images = num_images + 1
+			i += 1
+			all_data.append(j[key])
+		print("Numero del Json: " + str(json_number))
+		print("Imagenes en el Json: " + str(i), end='\n\n')
+except:
+	print("Error al leer los .json (quizas no haya imagenes aun)")
+	exit("-- No hay estadisticas --")
+
+if len(all_data) == 0:
+	exit("No hay imagenes ni carpeta savings")
+
+print("Imagenes Totales:" + " " + str(num_images) , end='\n\n')
 
 
 # organizamos los datos
@@ -67,18 +72,18 @@ else:
     peso_maximo = np.max(lista_pesos_validos)
 
 # mostramos los resultados
-print("=================  " + C + "Resultado del estudio" + B + "  =================\n")
-print("Imagenes totales: " + C + str(num_images) + B)
-print("Peso maximo permitido: " + fg(2) + str(UMBRAL_MAX_PESO) + B + " Kg\n")
+print("=================  " + "Resultado del estudio" + "  =================\n")
+print("Imagenes totales: " + str(num_images) )
+print("Peso maximo permitido: " + str(UMBRAL_MAX_PESO) + " Kg\n")
 
-print("Imagenes con peso valido: " + C + str(lista_pesos_validos.size) + B + " (" + fg(51) + str(round(p_pesos_validos,2)) + B + "%)")
-print("Media de pesos validos: " + C + str(round(media_de_pesos_validos,2)) + B + " Kg")
-print("Desviacion tipica: " + C + str(round(desviacion_de_pesos_validos,2)) + B + " Kg")
-print("Varianza: " + C + str(round(varianza_de_pesos_validos,2)) + B + "\n")
+print("Imagenes con peso valido: " + str(lista_pesos_validos.size) + " (" + str(round(p_pesos_validos,2)) + "%)")
+print("Media de pesos validos: " + str(round(media_de_pesos_validos,2)) + " Kg")
+print("Desviacion tipica: " + str(round(desviacion_de_pesos_validos,2)) + " Kg")
+print("Varianza: " + str(round(varianza_de_pesos_validos,2)) + "\n")
 
-print("Imagenes con peso invalido (mayor al maximo peso permitido): " + fg(208) + str(lista_pesos_no_validos.size) + B + " (" + fg(209) + str(round(p_pesos_no_validos,2)) + B + "%)")
-print("Imagenes con peso cero: " + fg(246) + str(num_pesos_cero) + B + " (" + fg(249) + str(round(p_pesos_cero,2)) + B + "%)\n")
+print("Imagenes con peso invalido (mayor al maximo peso permitido): " + str(lista_pesos_no_validos.size) + " (" + str(round(p_pesos_no_validos,2)) + "%)")
+print("Imagenes con peso cero: " + str(num_pesos_cero) + " (" + str(round(p_pesos_cero,2)) + "%)\n")
 
-print("Mayor peso encontrado: " + fg(202) + str(peso_maximo) + B + " Kg\n")
+print("Mayor peso encontrado: " + str(peso_maximo) + " Kg\n")
 
 

@@ -1,4 +1,5 @@
 import numpy as np
+import img_diff
 
 MAX_WHITES_ALLOWED = 20000
 
@@ -67,15 +68,19 @@ def is_there_a_lamb(cameras, model):
 
         result_index = np.argmax(np.array(res))
 
+
+        """
+         Guardamos solo los frames que sean detectados como LAMB
+        """
         if result_index == 0:
             print("\t CNN msg: There's a lamb. \t label:lamb")
             return True, "lamb"
         elif result_index == 1:
             print("\t CNN msg: There's no lamb. \t label:empty")
-            return not bool(np.random.randint(140)), "empty"
+            return False, "empty"
         elif result_index == 2:
             print("\t CNN msg: There's prob. a lamb in a wrong position: \t label:wrong")
-            return not bool(np.random.randint(80)), "wrong"
+            return False, "wrong"
         else:
             print("[!] Impossible print. Something is wrong in is_there_a_lamb()")
 
@@ -83,3 +88,19 @@ def is_there_a_lamb(cameras, model):
     else:
         print("\t Alghtm msg: Flies detected!! \t-->\t label:fly")
         return False, "fly"
+
+
+
+def check_changing_scene(new_frame, old_frame):
+    """
+    Dice si la escena del frame actual se considera distinta a la del frame anterior.
+    """
+
+    UMBRAL = 0.30 # 30%
+
+    diff = img_diff.diff_percent_between_two_img(new_frame, old_frame)
+
+    if diff > UMBRAL:
+        return True, diff
+    else:
+        return False, diff

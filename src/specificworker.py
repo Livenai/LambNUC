@@ -26,11 +26,12 @@ from genericworker import *
 # import librobocomp_qmat
 # import librobocomp_osgviewer
 # import librobocomp_innermodel
+import numpy as np
 import os
 from FileManager import save_info, FileManager, get_saved_info, url, get_weight, parent_folder
 from PySide2 import QtCore
 from rs_camera import RSCamera, config_devices
-from lamb_filter import is_there_a_lamb
+from lamb_filter import is_there_a_lamb, check_changing_scene
 import signal
 from telebot_messages import send_msg, start_bot
 from keras import models
@@ -59,6 +60,9 @@ class SpecificWorker(GenericWorker):
         self.cameras = []
         self.lamb_label = ""
         self.weight = 0.0
+        self.last_frame = np.full((480, 640), np.iinfo(np.uint16).max/2, dtype=np.uint16)
+        self.default_reference_frame = self.last_frame
+        self.num_img_not_changed = 0 # num imagenes no guardadas debido a que no hay un significativo cambio de escena
 
         self.telegram_bot = Thread(target=start_bot)
         self.telegram_bot.start()
@@ -115,6 +119,7 @@ class SpecificWorker(GenericWorker):
         self.Application.stop()
         from PySide2.QtWidgets import QApplication
         QApplication.quit()
+        exit("bye")
 
     #
     # sm_start_streams
@@ -168,7 +173,7 @@ class SpecificWorker(GenericWorker):
                     cam.get_frame()
             for cam in self.cameras:
                 cam.get_frame()
-            self.weight = get_weight()
+            self.weight = get_weight() # obtenemos el peso
             if self.weight is None:
                 self.exceptions[2] += 1
                 self.t_get_frames_to_exception.emit()
@@ -214,12 +219,50 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_processing_and_filter(self):
         print("Entered state Processing & Filter")
+        #self.t_processing_and_filter_to_save.emit() # bypass para guardar siempre fotos
         self.no_cam = 0
-        must_save, self.lamb_label = is_there_a_lamb(self.cameras, model=self.CNNmodel)
-        if must_save:
-            self.t_processing_and_filter_to_save.emit()
+        # comprobamos si la red detecta cordero y si la escena ha cambiado
+        is_lamb, self.lamb_label = is_there_a_lamb(self.cameras, model=self.CNNmodel)
+
+        # comprobamos si el peso esta dentro del umbral aceptable
+        is_good_weight = self.weight > 10.0 and self.weight <= 35.0
+
+        # obtenemos el nuevo frame y comprobamos
+        new_frame = self.cameras[0].depth_image
+        scene_change, change_percent = check_changing_scene(new_frame, self.last_frame)
+        print("\nla escena ha cambiado?:               " + str(scene_change) + "    (" + str(round(change_percent*100, 2)) + " %)")
+        print("num imagenes sin cambios: " + str(self.num_img_not_changed))
+
+        if is_lamb:
+            # comprobamos el peso
+
+            if is_good_weight:
+                # comprobamos si la escena ha cambiado (la primera vez siempre cambia) o si han pasado 20 frames sin cambios
+
+                if scene_change or self.num_img_not_changed > 20:
+                    # actualizamos last_frame con el frame actual
+                    self.last_frame = new_frame
+
+                    # reiniciamos el contador
+                    self.num_img_not_changed = 0
+
+                    # vamos al estado SAVE para guardar el frame y la info en disco
+                    self.t_processing_and_filter_to_save.emit()
+
+                else:
+                    # la escena no ha cambiado. Aumentamos el contador de frames sin cambios
+                    self.num_img_not_changed += 1
+                    self.t_processing_and_filter_to_get_frames.emit()
+            else:
+                # el peso no esta dentro del rango
+                self.t_processing_and_filter_to_get_frames.emit()
         else:
+            # no se detecta lamb. Reseteamos los frames de referencia:
+            # establecemos last_frame como el frame de referencia por defecto
+            self.last_frame = self.default_reference_frame
+
             self.t_processing_and_filter_to_get_frames.emit()
+
 
     #
     # sm_save
@@ -227,6 +270,7 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def sm_save(self):
         print("Entered state Save")
+
         try:
             save_info(self.cameras, weight=self.weight, lamb_label=self.lamb_label)
             self.lamb_label = ""
@@ -267,3 +311,4 @@ class SpecificWorker(GenericWorker):
 
 # =================================================================
 # =================================================================
+
