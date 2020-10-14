@@ -57,9 +57,11 @@ class SpecificWorker(GenericWorker):
         self.info_timer.setInterval(self.Info_period)
         self.info_timer.setSingleShot(True)
 
+        self.weighing_machine_version = 2 #1=old net one; 2=new RS232 with APIbascula.py
         self.cameras = []
         self.lamb_label = ""
         self.weight = 0.0
+        self.weight_status = 0
         self.last_frame = np.full((480, 640), np.iinfo(np.uint16).max/2, dtype=np.uint16)
         self.default_reference_frame = self.last_frame
         self.num_img_not_changed = 0 # num imagenes no guardadas debido a que no hay un significativo cambio de escena
@@ -139,7 +141,7 @@ class SpecificWorker(GenericWorker):
                     self.t_start_streams_to_get_frames.emit()
                 else:
                     print("ERROR: There is no recognized camera connected")
-                    self.exceptions[0] += 1 
+                    self.exceptions[0] += 1
                     self.t_start_streams_to_exception.emit()
             else:
                 print("ERROR: It couldn't start the streams")
@@ -173,7 +175,7 @@ class SpecificWorker(GenericWorker):
                     cam.get_frame()
             for cam in self.cameras:
                 cam.get_frame()
-            self.weight = get_weight() # obtenemos el peso
+            self.weight_status, self.weight = get_weight(self.weighing_machine_version) # obtenemos el peso
             if self.weight is None:
                 self.exceptions[2] += 1
                 self.t_get_frames_to_exception.emit()
@@ -225,7 +227,7 @@ class SpecificWorker(GenericWorker):
         is_lamb, self.lamb_label = is_there_a_lamb(self.cameras, model=self.CNNmodel)
 
         # comprobamos si el peso esta dentro del umbral aceptable
-        is_good_weight = self.weight > 10.0 and self.weight <= 35.0
+        is_good_weight = (self.weight > 10.0 and self.weight <= 35.0) and self.weight_status == "+"
 
         # obtenemos el nuevo frame y comprobamos
         new_frame = self.cameras[0].depth_image
@@ -311,4 +313,3 @@ class SpecificWorker(GenericWorker):
 
 # =================================================================
 # =================================================================
-

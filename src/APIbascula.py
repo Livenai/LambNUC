@@ -113,10 +113,10 @@ class APIbascula:
         Inicia la conexion automaticamente si no esta iniciada
         Si la conexion falla, devuelve (None, None)
 
-        [!] Esta funcion podria self.SER bloqueante y quedar atascada.
+        [!] Esta funcion podria ser bloqueante y quedar atascada.
 
         """
-
+        return "+", 15
         if self.comprobarConexion():
             # realizamos la peticion del Peso
             self.enviarComando("P\r")
@@ -146,7 +146,7 @@ class APIbascula:
 
         Si la conexion falla, devuelve None
 
-        [!] Esta funcion podria self.SER bloqueante y quedar atascada.
+        [!] Esta funcion podria ser bloqueante y quedar atascada.
 
         """
         if self.comprobarConexion():

@@ -7,6 +7,7 @@ import cv2
 from json import dumps
 from subprocess import check_output
 from telebot_send import send_msg
+from APIbascula import APIbascula
 
 class FileManager(Exception):
     pass
@@ -57,31 +58,46 @@ def get_saved_info():
     return result
 
 
-def get_weight():
+def get_weight(version):
     """
-    Gets the current weight from the weighting machine where the lambs are placed
-    :return float weight: the weight of the lamb
-        or None: in case there's too much difference of time from the image taken and the url time
+    Devuelve el estado del pesaje y el peso:
+        (estado, peso) -> (int, float)
+        estado:
+            - -> el peso es negativo
+            + -> el peso es estable
+            ? -> el peso no es estable
+
+        version:
+            1 -> version 1. Se usa la version antigua por red
+            2 -> version 2. Se usa la version nueva por cable RS232 con la API
     """
-    ts = time.time()
-    try:
-        json_url = request.urlopen(url)
-        # Get the weight json info
-        webdata = json.loads(json_url.read())
-        # valid_ts = int(webdata["valid_weight"]["time"])
-        current_ts = int(webdata["current_weight"]["time"])
-        # We do a comparison in order to get a coherent weight for this current time.
-        if 0 <= abs(current_ts - ts) <= 4:
-            weight = float(webdata["current_weight"]["value"])
-        else:
-            print("\nThe weights taken by the json are too far from the current time\n")
-            # There's a problem: don't save...?
-            return None
-    except Exception as e:
-        print("\nProblem getting the json from the given url")
-        print(e, "\n")
-        return None
-    return weight
+    if version == 1:
+        ts = time.time()
+        try:
+            json_url = request.urlopen(url)
+            # Get the weight json info
+            webdata = json.loads(json_url.read())
+            # valid_ts = int(webdata["valid_weight"]["time"])
+            current_ts = int(webdata["current_weight"]["time"])
+            # We do a comparison in order to get a coherent weight for this current time.
+            if 0 <= abs(current_ts - ts) <= 4:
+                weight = float(webdata["current_weight"]["value"])
+            else:
+                print("\nThe weights taken by the json are too far from the current time\n")
+                # There's a problem: don't save...?
+                return None, None
+        except Exception as e:
+            print("\nProblem getting the json from the given url")
+            print(e, "\n")
+            return None, None
+        return 0, weight
+    elif version == 2:
+        # utilizamos APIbascula.py para registrar el peso
+        print("Using V2 weighing machine")
+        api = APIbascula()
+        return api.obtenerPeso()
+    else:
+        return None, None
 
 
 def mkdirs(current_path, paths):
