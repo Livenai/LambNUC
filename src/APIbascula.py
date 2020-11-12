@@ -116,7 +116,6 @@ class APIbascula:
         [!] Esta funcion podria ser bloqueante y quedar atascada.
 
         """
-        return "+", 15
         if self.comprobarConexion():
             # realizamos la peticion del Peso
             self.enviarComando("P\r")

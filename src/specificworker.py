@@ -37,6 +37,9 @@ from telebot_messages import send_msg, start_bot
 from keras import models
 from threading import Thread
 
+from APIbascula import APIbascula
+
+
 ATTEMPS_TO_STREAM = 12
 ATTEMPS_TO_SAVE = 2
 ATTEMPS_TO_URL = 4
@@ -175,7 +178,7 @@ class SpecificWorker(GenericWorker):
                     cam.get_frame()
             for cam in self.cameras:
                 cam.get_frame()
-            self.weight_status, self.weight = get_weight(self.weighing_machine_version) # obtenemos el peso
+            self.weight, self.weight_status = get_weight(self.weighing_machine_version) # obtenemos el peso
             if self.weight is None:
                 self.exceptions[2] += 1
                 self.t_get_frames_to_exception.emit()
@@ -227,13 +230,14 @@ class SpecificWorker(GenericWorker):
         is_lamb, self.lamb_label = is_there_a_lamb(self.cameras, model=self.CNNmodel)
 
         # comprobamos si el peso esta dentro del umbral aceptable
-        is_good_weight = (self.weight > 10.0 and self.weight <= 35.0) and self.weight_status == "+"
+        is_good_weight = ((self.weight > 10.0) and (self.weight <= 35.0)) and (self.weight_status == "+")
 
         # obtenemos el nuevo frame y comprobamos
         new_frame = self.cameras[0].depth_image
         scene_change, change_percent = check_changing_scene(new_frame, self.last_frame)
         print("\nla escena ha cambiado?:               " + str(scene_change) + "    (" + str(round(change_percent*100, 2)) + " %)")
         print("num imagenes sin cambios: " + str(self.num_img_not_changed))
+        print("PESO -->  ", self.weight, "  ", self.weight_status)
 
         if is_lamb:
             # comprobamos el peso
@@ -259,7 +263,28 @@ class SpecificWorker(GenericWorker):
                 # el peso no esta dentro del rango
                 self.t_processing_and_filter_to_get_frames.emit()
         else:
-            # no se detecta lamb. Reseteamos los frames de referencia:
+            # no se detecta lamb. Comprobamos si la bascula
+            # esta completamente vacia para poder recalibrarla (TARA)
+            '''
+            Para ello, comprobamos el peso. Si este es menor
+            de un umbral muy bajo, entonces damos por hecho que no hay nada en
+            la bascula y podemos recalibrar la bascula para que ignore el peso
+            de los residuos que tuviera encima.
+            '''
+            TARA_weight_max_threshold = 2.0 # Kg
+
+            if (self.weight < TARA_weight_max_threshold) and (self.weight > 0.0):
+                # Enviamos el comando de reajuste a 0
+                B = APIbascula()
+                B.iniciarConexion()
+                pet = "Z\r"
+                print("\n\n|||||  Enviando comando de TARA (", pet[0], ")  |||||")
+                B.enviarComando(pet)
+                #print(B.ultimoError())
+
+
+
+            # Reseteamos los frames de referencia:
             # establecemos last_frame como el frame de referencia por defecto
             self.last_frame = self.default_reference_frame
 
